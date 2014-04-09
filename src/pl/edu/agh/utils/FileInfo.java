@@ -119,7 +119,7 @@ public class FileInfo {
                 if (retVal == 0) {
                     List<String> result = IOUtils.readLines(p.getInputStream());
                     for (String line : result) {
-                        Pattern pattern = Pattern.compile("flags*");
+                        Pattern pattern = Pattern.compile("flag*");
                         Matcher matcher = pattern.matcher(line);
                         if (matcher.find()) {
                             output = line.split(": ")[1];
