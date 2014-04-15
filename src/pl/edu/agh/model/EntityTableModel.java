@@ -14,7 +14,7 @@ import javax.swing.table.AbstractTableModel;
  */
 public class EntityTableModel extends AbstractTableModel {
 
-    private final List<Entity> entities;
+    private List<Entity> entities;
     private final String[] columnNames = {"Name", "Type", "Read", "Execute", "Write"
     };
 
@@ -61,4 +61,9 @@ public class EntityTableModel extends AbstractTableModel {
         entities.set(rowIndex, entity);
         fireTableCellUpdated(rowIndex, columnIndex);
     }
+    
+    public void setEntities(List<Entity> entities) {
+        this.entities = entities;
+        fireTableDataChanged();
+    }    
 }

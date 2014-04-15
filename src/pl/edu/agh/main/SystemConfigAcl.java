@@ -30,7 +30,7 @@ import pl.edu.agh.model.FileSystemModel;
 public class SystemConfigAcl extends javax.swing.JFrame {
 
     public SystemConfigAcl() {
-        
+
         initComponents();
         FileInfo.genFileInfo(properties, root);
         setLocationRelativeTo(null);
@@ -54,15 +54,16 @@ public class SystemConfigAcl extends javax.swing.JFrame {
         browser = new javax.swing.JScrollPane();
         aclList = new javax.swing.JTable();
         entities = new ArrayList<>();
-        nameCombox.addItem("NieTest1");
-        nameCombox.addItem("NieTest2");
-        nameCombox.addItem("NieTest3");
-        nameCombox.addItem("NieTest4");
+        List<String> users = FileInfo.getSystemUsers();
 
-        EntityTableModel model = new EntityTableModel(entities);
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        for (String user : users) {
+            namesCombox.addItem(user);
+        }
+        typesCombox.addItem(EntityType.USER);
+        typesCombox.addItem(EntityType.GROUP);
+        addButton = new javax.swing.JButton();
+        removeButton = new javax.swing.JButton();
+        updateButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("System Config ACL");
@@ -71,6 +72,11 @@ public class SystemConfigAcl extends javax.swing.JFrame {
         tree.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 treeMouseClicked(evt);
+            }
+        });
+        tree.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                treeKeyReleased(evt);
             }
         });
         sp.setViewportView(tree);
@@ -99,10 +105,9 @@ public class SystemConfigAcl extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                    .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -135,30 +140,31 @@ public class SystemConfigAcl extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        for (i = 0 ;i < 50 ; i++) {
-            entities.add(new Entity("Test" + i, EntityType.USER));
-        }
+        entities = FileInfo.getAclList(currentPath);
+        model = new EntityTableModel(entities);
         aclList.setModel(model);
         aclList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        TableColumn tc = aclList.getColumnModel().getColumn(0);
-        tc.setCellEditor(new DefaultCellEditor(nameCombox));
+        TableColumn tc1 = aclList.getColumnModel().getColumn(0);
+        tc1.setCellEditor(new DefaultCellEditor(namesCombox));
+        TableColumn tc2 = aclList.getColumnModel().getColumn(1);
+        tc2.setCellEditor(new DefaultCellEditor(typesCombox));
         browser.setViewportView(aclList);
 
-        jButton1.setText("Add");
-        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+        addButton.setText("Add");
+        addButton.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton1MouseClicked(evt);
+                addButtonMouseClicked(evt);
             }
         });
 
-        jButton2.setText("Remove");
-        jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
+        removeButton.setText("Remove");
+        removeButton.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton2MouseClicked(evt);
+                removeButtonMouseClicked(evt);
             }
         });
 
-        jButton3.setText("Update");
+        updateButton.setText("Update");
 
         javax.swing.GroupLayout aclLayout = new javax.swing.GroupLayout(acl);
         acl.setLayout(aclLayout);
@@ -168,22 +174,23 @@ public class SystemConfigAcl extends javax.swing.JFrame {
                 .addGroup(aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(browser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(aclLayout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(addButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2)
+                        .addComponent(removeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton3)))
+                        .addComponent(updateButton)))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         aclLayout.setVerticalGroup(
             aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(aclLayout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(browser, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2)
-                    .addComponent(jButton3)))
+                    .addComponent(addButton)
+                    .addComponent(removeButton)
+                    .addComponent(updateButton)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -210,28 +217,40 @@ public class SystemConfigAcl extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private void treeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_treeMouseClicked
         if (tree.getSelectionPath() != null) {
             currentPath = tree.getSelectionPath().getLastPathComponent().toString();
         }
         FileInfo.genFileInfo(properties, currentPath);
+        namesCombox.setSelectedIndex(-1);
+        typesCombox.setSelectedIndex(-1);
+        entities.clear();
+        entities.addAll(FileInfo.getAclList(currentPath));    
+        aclList.updateUI();
     }//GEN-LAST:event_treeMouseClicked
 
-    private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-        Entity entity = new Entity("Test" + i++, EntityType.GROUP);
+    private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_addButtonMouseClicked
+        Entity entity = new Entity("", EntityType.GROUP);
         entities.add(entity);
         aclList.updateUI();
         aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
-    }//GEN-LAST:event_jButton1MouseClicked
+    }//GEN-LAST:event_addButtonMouseClicked
 
-    private void jButton2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton2MouseClicked
+    private void removeButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_removeButtonMouseClicked
         int row = aclList.getSelectedRow();
         if (row >= 0 && row < aclList.getRowCount()) {
             entities.remove(row);
         }
         aclList.updateUI();
-    }//GEN-LAST:event_jButton2MouseClicked
+    }//GEN-LAST:event_removeButtonMouseClicked
+
+    private void treeKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_treeKeyReleased
+        if (tree.getSelectionPath() != null) {
+            currentPath = tree.getSelectionPath().getLastPathComponent().toString();
+        }
+        FileInfo.genFileInfo(properties, currentPath);
+    }//GEN-LAST:event_treeKeyReleased
 
     /**
      * @param args the command line arguments
@@ -250,13 +269,13 @@ public class SystemConfigAcl extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel acl;
     private javax.swing.JTable aclList;
-    private JComboBox nameCombox = new JComboBox();
+    private JComboBox namesCombox = new JComboBox();
+    private JComboBox typesCombox = new JComboBox();
     private int i = 0;
     private List<Entity> entities;
+    private EntityTableModel model;
+    private javax.swing.JButton addButton;
     private javax.swing.JScrollPane browser;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -266,10 +285,12 @@ public class SystemConfigAcl extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel properties;
+    private javax.swing.JButton removeButton;
     private javax.swing.JScrollPane sp;
     private javax.swing.JTree tree;
     private final String root = "/";
     private FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
+    private javax.swing.JButton updateButton;
     // End of variables declaration//GEN-END:variables
     private String currentPath = root;
 }

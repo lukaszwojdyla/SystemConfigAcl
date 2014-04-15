@@ -22,6 +22,9 @@ public class Entity {
         this.type = type;
     }
 
+    public Entity() {
+    }
+    
     public String getName() {
         return name;
     }

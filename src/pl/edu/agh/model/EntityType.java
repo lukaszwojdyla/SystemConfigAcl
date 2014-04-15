@@ -12,5 +12,4 @@ package pl.edu.agh.model;
  */
 public enum EntityType {
     USER, GROUP, OTHER, D_USER, D_GROUP, D_OTHER;
-    
 }

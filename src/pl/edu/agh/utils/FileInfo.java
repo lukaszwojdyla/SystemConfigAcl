@@ -7,6 +7,7 @@ package pl.edu.agh.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +16,8 @@ import java.util.regex.Pattern;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.apache.commons.io.IOUtils;
+import pl.edu.agh.model.Entity;
+import pl.edu.agh.model.EntityType;
 
 /**
  *
@@ -109,8 +112,8 @@ public class FileInfo {
         return output;
     }
 
-    public static String getAclList(String path) {
-        String output = new String();
+    public static List<Entity> getAclList(String path) {
+        List<Entity> entities = new ArrayList<>();
         
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"getfacl", path});
@@ -118,11 +121,47 @@ public class FileInfo {
             if (retVal == 0) {
                 if (retVal == 0) {
                     List<String> result = IOUtils.readLines(p.getInputStream());
-                    for (String line : result) {
+                    result.stream().forEach((line) -> {
                         Pattern pattern = Pattern.compile("user*");
                         Matcher matcher = pattern.matcher(line);
                         if (matcher.find()) {
-                            output = line.split(": ")[1];
+                            if (line.split(":")[1].length() > 0) {
+                                Entity entity = new Entity();
+                                String permissions = line.split(":")[2];
+                                String user = line.split(":")[1];
+                                              
+                                entity.setName(user);
+                                entity.setType(EntityType.USER);
+                                
+                                if (permissions.contains("r")) entity.setRead(true);
+                                if (permissions.contains("w")) entity.setWrite(true);
+                                if (permissions.contains("x")) entity.setExecute(true);
+                                
+                                entities.add(entity);
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return entities;
+    }
+    
+    public static List<String> getSystemUsers() {
+        List<String> users = new ArrayList<>();
+        
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"cat", "/etc/passwd"});
+            int retVal = p.waitFor();
+            if (retVal == 0) {
+                if (retVal == 0) {
+                    List<String> result = IOUtils.readLines(p.getInputStream());
+                    for (String line : result) {
+                        if (Integer.parseInt(line.split(":")[3]) >= 500) {
+                            users.add(line.split(":")[0]);
                         }
                     }
                 }
@@ -130,8 +169,8 @@ public class FileInfo {
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        return output;
+        
+        return users;
     }
 
     private static boolean isWritable(String path) {
