@@ -1,21 +1,33 @@
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * and open the template in 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+the editor.
  */
 package pl.edu.agh.main;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.table.TableColumn;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityTableModel;
@@ -27,10 +39,9 @@ import pl.edu.agh.model.FileSystemModel;
  *
  * @author lukasz
  */
-public class SystemConfigAcl extends javax.swing.JFrame {
+public class SystemConfigAcl extends JFrame {
 
     public SystemConfigAcl() {
-
         initComponents();
         FileInfo.genFileInfo(properties, root);
         setLocationRelativeTo(null);
@@ -56,9 +67,22 @@ public class SystemConfigAcl extends javax.swing.JFrame {
         entities = new ArrayList<>();
         List<String> users = FileInfo.getSystemUsers();
 
-        for (String user : users) {
-            namesCombox.addItem(user);
-        }
+        namesCombox.addPopupMenuListener(new PopupMenuListener() {
+
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent evt) {
+                namesComboxPopupVisible(evt);
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent evt) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent evt) {
+            }
+        });
+
         typesCombox.addItem(EntityType.USER);
         typesCombox.addItem(EntityType.GROUP);
         addButton = new javax.swing.JButton();
@@ -217,32 +241,47 @@ public class SystemConfigAcl extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-    
+
     private void treeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_treeMouseClicked
+        List<Entity> list = new ArrayList<>();
         if (tree.getSelectionPath() != null) {
             currentPath = tree.getSelectionPath().getLastPathComponent().toString();
         }
+        list = FileInfo.getAclList(currentPath);
         FileInfo.genFileInfo(properties, currentPath);
         namesCombox.setSelectedIndex(-1);
         typesCombox.setSelectedIndex(-1);
         entities.clear();
-        entities.addAll(FileInfo.getAclList(currentPath));    
+        entities.addAll(list);
         aclList.updateUI();
+        if (list.size() > 0) {
+            int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
+            aclList.setRowSelectionInterval(lastRow, lastRow);
+            aclList.setColumnSelectionInterval(0, 0);   
+        }
     }//GEN-LAST:event_treeMouseClicked
 
     private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_addButtonMouseClicked
-        Entity entity = new Entity("", EntityType.GROUP);
+        Entity entity = new Entity("NEW", EntityType.NEW);
         entities.add(entity);
         aclList.updateUI();
         aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
+        int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
+        aclList.setRowSelectionInterval(lastRow, lastRow);
+        aclList.setColumnSelectionInterval(0, 0);
     }//GEN-LAST:event_addButtonMouseClicked
 
     private void removeButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_removeButtonMouseClicked
         int row = aclList.getSelectedRow();
         if (row >= 0 && row < aclList.getRowCount()) {
             entities.remove(row);
+            aclList.updateUI();
+            if (aclList.getRowCount() > 0 ) {
+                int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
+                aclList.setRowSelectionInterval(lastRow, lastRow);
+                aclList.setColumnSelectionInterval(0, 0);
+            }
         }
-        aclList.updateUI();
     }//GEN-LAST:event_removeButtonMouseClicked
 
     private void treeKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_treeKeyReleased
@@ -251,6 +290,32 @@ public class SystemConfigAcl extends javax.swing.JFrame {
         }
         FileInfo.genFileInfo(properties, currentPath);
     }//GEN-LAST:event_treeKeyReleased
+
+    private void namesComboxPopupVisible(PopupMenuEvent evt) {
+        System.out.println("TEST2");
+        
+        int column = aclList.getSelectedColumn();
+        int row = aclList.getSelectedRow();
+        EntityType type = (EntityType) aclList.getValueAt(row, 1);
+        List<String> types = new ArrayList<>();
+        System.out.println(type);
+        
+        switch (type) {
+            case GROUP:
+                System.out.println("group");
+                types.addAll(FileInfo.getSystemGroups());
+                break;
+            case USER:
+                System.out.println("user");
+                types.addAll(FileInfo.getSystemUsers());
+                break;
+            case NEW:
+                types.add("-----");
+                break;
+        }
+
+        namesCombox.setModel(new DefaultComboBoxModel(types.toArray()));
+    }
 
     /**
      * @param args the command line arguments
