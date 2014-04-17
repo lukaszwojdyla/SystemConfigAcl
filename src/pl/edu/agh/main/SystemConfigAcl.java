@@ -2,17 +2,15 @@
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-the editor.
  */
 package pl.edu.agh.main;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +18,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.GroupLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
+import javax.swing.LayoutStyle;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.TableColumn;
@@ -34,6 +41,7 @@ import pl.edu.agh.model.EntityTableModel;
 import pl.edu.agh.model.EntityType;
 import pl.edu.agh.utils.FileInfo;
 import pl.edu.agh.model.FileSystemModel;
+import pl.edu.agh.utils.FileOperator;
 
 /**
  *
@@ -43,29 +51,172 @@ public class SystemConfigAcl extends JFrame {
 
     public SystemConfigAcl() {
         initComponents();
-        FileInfo.genFileInfo(properties, root);
+        fileInfo.genFileInfo(properties, root);
         setLocationRelativeTo(null);
     }
 
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        sp = new javax.swing.JScrollPane();
-        tree = new javax.swing.JTree(fileSystemModel);
-        properties = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
-        jLabel8 = new javax.swing.JLabel();
-        acl = new javax.swing.JPanel();
-        browser = new javax.swing.JScrollPane();
-        aclList = new javax.swing.JTable();
+        sp = new JScrollPane();
+        tree = new JTree(fileSystemModel);
+        properties = new JPanel();
+        pathLabel = new JLabel();
+        path = new JLabel();
+        typeLabel = new JLabel();
+        type = new JLabel();
+        maskLabel = new JLabel();
+        mask = new JLabel();
+        flagsLabel = new JLabel();
+        flags = new JLabel();
+        acl = new JPanel();
+        browser = new JScrollPane();
+        aclList = new JTable();
         entities = new ArrayList<>();
-        List<String> users = FileInfo.getSystemUsers();
+        List<String> users = fileInfo.getSystemUsers();
+
+        for (EntityType type : EntityType.values()) {
+            typesCombox.addItem(type);
+        }
+
+        entities = fileInfo.getAclList(currentPath);
+        model = new EntityTableModel(entities);
+        addButton = new JButton();
+        removeButton = new JButton();
+        updateButton = new JButton();
+
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setTitle("System Config ACL");
+        setResizable(false);
+
+        sp.setViewportView(tree);
+
+        pathLabel.setText("Path");
+        path.setText("path");
+
+        typeLabel.setText("Type");
+        type.setText("type");
+
+        maskLabel.setText("Mask");
+        mask.setText("mask");
+
+        flagsLabel.setText("Flags");
+        flags.setText("flags");
+
+        aclList.setModel(model);
+        aclList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        TableColumn tc1 = aclList.getColumnModel().getColumn(0);
+        DefaultCellEditor editor1 = new DefaultCellEditor(namesCombox);
+        editor1.setClickCountToStart(2);
+        tc1.setCellEditor(editor1);
+
+        TableColumn tc2 = aclList.getColumnModel().getColumn(1);
+        DefaultCellEditor editor2 = new DefaultCellEditor(typesCombox);
+        editor2.setClickCountToStart(2);
+        tc2.setCellEditor(editor2);
+        browser.setViewportView(aclList);
+
+        GroupLayout propertiesLayout = new GroupLayout(properties);
+        properties.setLayout(propertiesLayout);
+        propertiesLayout.setHorizontalGroup(
+                propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(propertiesLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+                                .addComponent(pathLabel, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
+                                .addComponent(flagsLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
+                                .addComponent(maskLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(typeLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(type, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(mask, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(flags, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(path, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(propertiesLayout.createSequentialGroup()
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED))
+                ));
+        propertiesLayout.setVerticalGroup(
+                propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(propertiesLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(pathLabel)
+                                .addComponent(path))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(typeLabel)
+                                .addComponent(type))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(maskLabel)
+                                .addComponent(mask))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(flagsLabel)
+                                .addComponent(flags))
+                        .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        GroupLayout aclLayout = new GroupLayout(acl);
+        acl.setLayout(aclLayout);
+        aclLayout.setHorizontalGroup(
+                aclLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(aclLayout.createSequentialGroup()
+                        .addGroup(aclLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(browser, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addGroup(aclLayout.createSequentialGroup()
+                                        .addComponent(addButton)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(removeButton)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(updateButton)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+        );
+        aclLayout.setVerticalGroup(
+                aclLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(aclLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(browser, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(aclLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(addButton)
+                                .addComponent(removeButton)
+                                .addComponent(updateButton)))
+        );
+
+        GroupLayout layout = new GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                        .addComponent(sp, GroupLayout.PREFERRED_SIZE, 471, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(properties, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(acl, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap())
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addComponent(sp, GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
+                .addGroup(layout.createSequentialGroup()
+                        .addComponent(properties, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(acl, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())
+        );
+        
+                tree.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                treeMouseClicked(evt);
+            }
+        });
+        tree.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent evt) {
+                treeKeyReleased(evt);
+            }
+        });
 
         namesCombox.addPopupMenuListener(new PopupMenuListener() {
 
@@ -76,6 +227,7 @@ public class SystemConfigAcl extends JFrame {
 
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent evt) {
+                namesComboxPopupInvisible(evt);
             }
 
             @Override
@@ -83,96 +235,11 @@ public class SystemConfigAcl extends JFrame {
             }
         });
 
-        typesCombox.addItem(EntityType.USER);
-        typesCombox.addItem(EntityType.GROUP);
-        addButton = new javax.swing.JButton();
-        removeButton = new javax.swing.JButton();
-        updateButton = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("System Config ACL");
-        setResizable(false);
-
-        tree.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                treeMouseClicked(evt);
+        typesCombox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent evt) {
+                typesComboxItemStateChanged(evt);
             }
         });
-        tree.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                treeKeyReleased(evt);
-            }
-        });
-        sp.setViewportView(tree);
-
-        jLabel1.setText("Path");
-
-        jLabel2.setText("jLabel2");
-
-        jLabel3.setText("Type");
-
-        jLabel4.setText("jLabel4");
-
-        jLabel5.setText("Mask");
-
-        jLabel6.setText("jLabel6");
-
-        jLabel7.setText("Flags");
-
-        jLabel8.setText("jLabel8");
-
-        javax.swing.GroupLayout propertiesLayout = new javax.swing.GroupLayout(properties);
-        properties.setLayout(propertiesLayout);
-        propertiesLayout.setHorizontalGroup(
-            propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(propertiesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(propertiesLayout.createSequentialGroup()
-                        .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addContainerGap())))
-        );
-        propertiesLayout.setVerticalGroup(
-            propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(propertiesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(jLabel6))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(propertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(jLabel8))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        entities = FileInfo.getAclList(currentPath);
-        model = new EntityTableModel(entities);
-        aclList.setModel(model);
-        aclList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        TableColumn tc1 = aclList.getColumnModel().getColumn(0);
-        tc1.setCellEditor(new DefaultCellEditor(namesCombox));
-        TableColumn tc2 = aclList.getColumnModel().getColumn(1);
-        tc2.setCellEditor(new DefaultCellEditor(typesCombox));
-        browser.setViewportView(aclList);
 
         addButton.setText("Add");
         addButton.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -189,66 +256,22 @@ public class SystemConfigAcl extends JFrame {
         });
 
         updateButton.setText("Update");
-
-        javax.swing.GroupLayout aclLayout = new javax.swing.GroupLayout(acl);
-        acl.setLayout(aclLayout);
-        aclLayout.setHorizontalGroup(
-            aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(aclLayout.createSequentialGroup()
-                .addGroup(aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(browser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(aclLayout.createSequentialGroup()
-                        .addComponent(addButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(removeButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(updateButton)))
-                .addGap(0, 0, Short.MAX_VALUE))
-        );
-        aclLayout.setVerticalGroup(
-            aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(aclLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(browser, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(aclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(addButton)
-                    .addComponent(removeButton)
-                    .addComponent(updateButton)))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(sp, javax.swing.GroupLayout.PREFERRED_SIZE, 471, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(properties, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(acl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(sp, javax.swing.GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(properties, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(acl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        updateButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                updateButtonMouseClicked(evt);
+            }
+        });
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }
 
-    private void treeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_treeMouseClicked
+    private void treeMouseClicked(java.awt.event.MouseEvent evt) {
         List<Entity> list = new ArrayList<>();
         if (tree.getSelectionPath() != null) {
             currentPath = tree.getSelectionPath().getLastPathComponent().toString();
         }
-        list = FileInfo.getAclList(currentPath);
-        FileInfo.genFileInfo(properties, currentPath);
+        list.addAll(fileInfo.getAclList(currentPath));
+        fileInfo.genFileInfo(properties, currentPath);
         namesCombox.setSelectedIndex(-1);
         typesCombox.setSelectedIndex(-1);
         entities.clear();
@@ -257,64 +280,73 @@ public class SystemConfigAcl extends JFrame {
         if (list.size() > 0) {
             int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
             aclList.setRowSelectionInterval(lastRow, lastRow);
-            aclList.setColumnSelectionInterval(0, 0);   
         }
-    }//GEN-LAST:event_treeMouseClicked
+    }
 
-    private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_addButtonMouseClicked
-        Entity entity = new Entity("NEW", EntityType.NEW);
+    /* 
+        
+     */
+    private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {
+        Entity entity = new Entity("-----", EntityType.NEW);
         entities.add(entity);
         aclList.updateUI();
         aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
         int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
         aclList.setRowSelectionInterval(lastRow, lastRow);
-        aclList.setColumnSelectionInterval(0, 0);
-    }//GEN-LAST:event_addButtonMouseClicked
+    }
 
-    private void removeButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_removeButtonMouseClicked
+    private void removeButtonMouseClicked(java.awt.event.MouseEvent evt) {
         int row = aclList.getSelectedRow();
         if (row >= 0 && row < aclList.getRowCount()) {
             entities.remove(row);
             aclList.updateUI();
-            if (aclList.getRowCount() > 0 ) {
+            if (aclList.getRowCount() > 0) {
                 int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
                 aclList.setRowSelectionInterval(lastRow, lastRow);
-                aclList.setColumnSelectionInterval(0, 0);
             }
         }
-    }//GEN-LAST:event_removeButtonMouseClicked
+    }
 
-    private void treeKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_treeKeyReleased
+    private void treeKeyReleased(java.awt.event.KeyEvent evt) {
         if (tree.getSelectionPath() != null) {
             currentPath = tree.getSelectionPath().getLastPathComponent().toString();
         }
-        FileInfo.genFileInfo(properties, currentPath);
-    }//GEN-LAST:event_treeKeyReleased
+        fileInfo.genFileInfo(properties, currentPath);
+    }
+
+    private void updateButtonMouseClicked(java.awt.event.MouseEvent evt) {
+        fileOperator.test();
+    }
 
     private void namesComboxPopupVisible(PopupMenuEvent evt) {
-        System.out.println("TEST2");
-        
-        int column = aclList.getSelectedColumn();
-        int row = aclList.getSelectedRow();
+        int row = aclList.convertRowIndexToView(aclList.getSelectedRow());
         EntityType type = (EntityType) aclList.getValueAt(row, 1);
         List<String> types = new ArrayList<>();
-        System.out.println(type);
-        
+
         switch (type) {
             case GROUP:
-                System.out.println("group");
-                types.addAll(FileInfo.getSystemGroups());
+            case D_GROUP:
+                types.addAll(fileInfo.getSystemGroups());
                 break;
             case USER:
-                System.out.println("user");
-                types.addAll(FileInfo.getSystemUsers());
+            case D_USER:
+                types.addAll(fileInfo.getSystemUsers());
                 break;
             case NEW:
                 types.add("-----");
                 break;
         }
-
         namesCombox.setModel(new DefaultComboBoxModel(types.toArray()));
+    }
+
+    public void namesComboxPopupInvisible(PopupMenuEvent evt) {
+    }
+
+    private void typesComboxItemStateChanged(ItemEvent evt) {
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            int row = aclList.getSelectedRow();
+            aclList.getModel().setValueAt("-----", row, 0);
+        }
     }
 
     /**
@@ -331,31 +363,30 @@ public class SystemConfigAcl extends JFrame {
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel acl;
-    private javax.swing.JTable aclList;
+    private JPanel acl;
+    private JTable aclList;
     private JComboBox namesCombox = new JComboBox();
     private JComboBox typesCombox = new JComboBox();
-    private int i = 0;
     private List<Entity> entities;
     private EntityTableModel model;
-    private javax.swing.JButton addButton;
-    private javax.swing.JScrollPane browser;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JPanel properties;
-    private javax.swing.JButton removeButton;
-    private javax.swing.JScrollPane sp;
-    private javax.swing.JTree tree;
+    private JButton addButton;
+    private JScrollPane browser;
+    private JLabel flags;
+    private JLabel flagsLabel;
+    private JLabel mask;
+    private JLabel maskLabel;
+    private JLabel path;
+    private JLabel pathLabel;
+    private JPanel properties;
+    private JButton removeButton;
+    private JScrollPane sp;
+    private JTree tree;
     private final String root = "/";
     private FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
-    private javax.swing.JButton updateButton;
-    // End of variables declaration//GEN-END:variables
+    private JLabel type;
+    private JLabel typeLabel;
+    private JButton updateButton;
     private String currentPath = root;
+    private final FileOperator fileOperator = new FileOperator();
+    private final FileInfo fileInfo = new FileInfo();
 }

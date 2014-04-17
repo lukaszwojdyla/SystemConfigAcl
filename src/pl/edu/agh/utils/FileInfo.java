@@ -25,7 +25,7 @@ import pl.edu.agh.model.EntityType;
  */
 public class FileInfo {
 
-    public static void genFileInfo(JPanel panel, String path) {
+    public void genFileInfo(JPanel panel, String path) {
         if (isReadeable(path)) {
             JLabel currentPath = (JLabel) panel.getComponent(7);
             JLabel type = (JLabel) panel.getComponent(4);
@@ -45,7 +45,7 @@ public class FileInfo {
         }
     }
 
-    private static String getType(String path) {
+    private String getType(String path) {
         String output = new String();
 
         try {
@@ -62,7 +62,7 @@ public class FileInfo {
         return output;
     }
 
-    private static String getMask(String path) {
+    private String getMask(String path) {
         String output = new String();
 
         try {
@@ -87,7 +87,7 @@ public class FileInfo {
         return output;
     }
 
-    private static String getFlags(String path) {
+    private String getFlags(String path) {
         String output = new String();
 
         try {
@@ -112,7 +112,7 @@ public class FileInfo {
         return output;
     }
 
-    public static List<Entity> getAclList(String path) {
+    public List<Entity> getAclList(String path) {
         List<Entity> entities = new ArrayList<>();
         
         try {
@@ -150,7 +150,7 @@ public class FileInfo {
         return entities;
     }
     
-    public static List<String> getSystemUsers() {
+    public List<String> getSystemUsers() {
         List<String> users = new ArrayList<>();
         
         try {
@@ -172,12 +172,35 @@ public class FileInfo {
         
         return users;
     }
+    
+        public List<String> getSystemGroups() {
+        List<String> groups = new ArrayList<>();
+        
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"cat", "/etc/group"});
+            int retVal = p.waitFor();
+            if (retVal == 0) {
+                if (retVal == 0) {
+                    List<String> result = IOUtils.readLines(p.getInputStream());
+                    for (String line : result) {
+                        if (Integer.parseInt(line.split(":")[2]) >= 500) {
+                            groups.add(line.split(":")[0]);
+                        }
+                    }
+                }
+            }
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return groups;
+    }
 
-    private static boolean isWritable(String path) {
+    private boolean isWritable(String path) {
         return new File(path).canWrite();
     }
 
-    private static boolean isReadeable(String path) {
+    private boolean isReadeable(String path) {
         return new File(path).canRead();
     }
 }
