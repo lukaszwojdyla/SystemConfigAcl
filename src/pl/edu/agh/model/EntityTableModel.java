@@ -65,5 +65,9 @@ public class EntityTableModel extends AbstractTableModel {
     public void setEntities(List<Entity> entities) {
         this.entities = entities;
         fireTableDataChanged();
-    }    
+    }
+    
+    public List<Entity> getEntities() {
+        return entities;
+    }
 }

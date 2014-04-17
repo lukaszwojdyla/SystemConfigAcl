@@ -6,7 +6,6 @@
 package pl.edu.agh.main;
 
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -24,6 +23,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -37,12 +38,15 @@ import javax.swing.WindowConstants;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.TableColumn;
+import pl.edu.agh.model.DefaultUserType;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityTableModel;
 import pl.edu.agh.model.EntityType;
 import pl.edu.agh.utils.FileInfo;
 import pl.edu.agh.model.FileSystemModel;
+import pl.edu.agh.model.OsType;
 import pl.edu.agh.utils.FileOperator;
+import pl.edu.agh.utils.OsUtils;
 
 /**
  *
@@ -50,20 +54,72 @@ import pl.edu.agh.utils.FileOperator;
  */
 public class SystemConfigAcl extends JFrame {
 
+    private JPanel acl;
+    private JTable aclList;
+    private final JComboBox namesCombox = new JComboBox();
+    private final JComboBox typesCombox = new JComboBox();
+    private JCheckBox readMask;
+    private JCheckBox writeMask;
+    private JCheckBox executeMask;
+    private List<Entity> entities;
+    private EntityTableModel model;
+    private JButton addButton;
+    private JScrollPane browser;
+    private JLabel flags;
+    private JLabel flagsLabel;
+    private JLabel mask;
+    private JLabel maskLabel;
+    private JLabel path;
+    private JLabel pathLabel;
+    private JLabel setmaskLabel;
+    private JPanel properties;
+    private JButton removeButton;
+    private JScrollPane sp;
+    private JTree tree;
+    private final String root = "/";
+    private final FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
+    private JLabel type;
+    private JLabel typeLabel;
+    private JButton updateButton;
+    private String currentPath = root;
+    private final FileOperator fileOperator = new FileOperator();
+    private final FileInfo fileInfo = new FileInfo();
+
+    /*
+     *
+     */
     public SystemConfigAcl() {
-        initComponents();
-        fileInfo.genFileInfo(properties, root);
-        setLocationRelativeTo(null);
+        if (OsUtils.getOsType().equals(OsType.Linux)) {
+            initComponents();
+            initListeners();
+            fileInfo.genFileInfo(properties, root);
+            setLocationRelativeTo(null);
+        } else {
+            messageBox("System operacyjny " + OsUtils.getOsName() + " nie jest wspierany!", ERROR_MESSAGE);
+        }
     }
 
-    private void initComponents() {
+    /*
+     *
+     */
+    private void messageBox(String message, int messageType) {
+        JOptionPane.showMessageDialog(null, message, "", messageType);
+        System.exit(0);
+    }
 
+    /*
+     *
+     */
+    private void initComponents() {
         sp = new JScrollPane();
         tree = new JTree(fileSystemModel);
         properties = new JPanel();
         readMask = new JCheckBox();
         writeMask = new JCheckBox();
         executeMask = new JCheckBox();
+        addButton = new JButton();
+        removeButton = new JButton();
+        updateButton = new JButton();
         pathLabel = new JLabel();
         path = new JLabel();
         typeLabel = new JLabel();
@@ -85,9 +141,10 @@ public class SystemConfigAcl extends JFrame {
 
         entities = fileInfo.getAclList(currentPath);
         model = new EntityTableModel(entities);
-        addButton = new JButton();
-        removeButton = new JButton();
-        updateButton = new JButton();
+
+        addButton.setText("Add");
+        removeButton.setText("Remove");
+        updateButton.setText("Update");
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("System Config ACL");
@@ -235,6 +292,13 @@ public class SystemConfigAcl extends JFrame {
                         .addContainerGap())
         );
 
+        pack();
+    }
+
+    /*
+     *
+     */
+    private void initListeners() {
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
@@ -267,7 +331,6 @@ public class SystemConfigAcl extends JFrame {
             typesComboxItemStateChanged(evt);
         });
 
-        addButton.setText("Add");
         addButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -275,7 +338,6 @@ public class SystemConfigAcl extends JFrame {
             }
         });
 
-        removeButton.setText("Remove");
         removeButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -283,17 +345,17 @@ public class SystemConfigAcl extends JFrame {
             }
         });
 
-        updateButton.setText("Update");
         updateButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 updateButtonMouseClicked(evt);
             }
         });
-
-        pack();
     }
 
+    /*
+     *
+     */
     private void treeMouseClicked(java.awt.event.MouseEvent evt) {
         List<Entity> list = new ArrayList<>();
         if (tree.getSelectionPath() != null) {
@@ -312,8 +374,11 @@ public class SystemConfigAcl extends JFrame {
         }
     }
 
+    /*
+     *
+     */
     private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {
-        Entity entity = new Entity("-----", EntityType.NEW);
+        Entity entity = new Entity(DefaultUserType.DEFAULT.toString(), EntityType.NEW);
         entities.add(entity);
         aclList.updateUI();
         aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
@@ -356,7 +421,7 @@ public class SystemConfigAcl extends JFrame {
     }
 
     private void updateButtonMouseClicked(java.awt.event.MouseEvent evt) {
-        fileOperator.saveAcls(aclList);
+        fileOperator.saveAcls(aclList, currentPath);
     }
 
     private void namesComboxPopupVisible(PopupMenuEvent evt) {
@@ -374,7 +439,7 @@ public class SystemConfigAcl extends JFrame {
                 types.addAll(fileInfo.getSystemUsers());
                 break;
             case NEW:
-                types.add("-----");
+                types.add(DefaultUserType.DEFAULT.toString());
                 break;
         }
         namesCombox.setModel(new DefaultComboBoxModel(types.toArray()));
@@ -383,7 +448,7 @@ public class SystemConfigAcl extends JFrame {
     private void typesComboxItemStateChanged(ItemEvent evt) {
         if (evt.getStateChange() == ItemEvent.SELECTED) {
             int row = aclList.getSelectedRow();
-            aclList.getModel().setValueAt("-----", row, 0);
+            aclList.getModel().setValueAt(DefaultUserType.DEFAULT, row, 0);
         }
     }
 
@@ -400,35 +465,4 @@ public class SystemConfigAcl extends JFrame {
             new SystemConfigAcl().setVisible(true);
         });
     }
-
-    private JPanel acl;
-    private JTable aclList;
-    private final JComboBox namesCombox = new JComboBox();
-    private final JComboBox typesCombox = new JComboBox();
-    private JCheckBox readMask;
-    private JCheckBox writeMask;
-    private JCheckBox executeMask;
-    private List<Entity> entities;
-    private EntityTableModel model;
-    private JButton addButton;
-    private JScrollPane browser;
-    private JLabel flags;
-    private JLabel flagsLabel;
-    private JLabel mask;
-    private JLabel maskLabel;
-    private JLabel path;
-    private JLabel pathLabel;
-    private JLabel setmaskLabel;
-    private JPanel properties;
-    private JButton removeButton;
-    private JScrollPane sp;
-    private JTree tree;
-    private final String root = "/";
-    private final FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
-    private JLabel type;
-    private JLabel typeLabel;
-    private JButton updateButton;
-    private String currentPath = root;
-    private final FileOperator fileOperator = new FileOperator();
-    private final FileInfo fileInfo = new FileInfo();
 }

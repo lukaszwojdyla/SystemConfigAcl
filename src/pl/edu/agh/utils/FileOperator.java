@@ -5,9 +5,13 @@
  */
 package pl.edu.agh.utils;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTable;
+import pl.edu.agh.model.Entity;
+import pl.edu.agh.model.EntityTableModel;
 import pl.edu.agh.model.EntityType;
 
 /**
@@ -16,18 +20,30 @@ import pl.edu.agh.model.EntityType;
  */
 public class FileOperator {
 
-    public void saveAcls(JTable aclList) {
-        int rowsCount = aclList.getRowCount();
-        int columnsCount = aclList.getColumnCount();
-
-        for (int i = 0; i < rowsCount; i++) {
-            if (!aclList.getValueAt(i, 0).equals("-----") && !aclList.getValueAt(i, 1).equals(EntityType.NEW)) {
-                List<String> entity = new ArrayList<>();
-                for (int j = 0; j < columnsCount; j++) {
-                    entity.add((String) aclList.getValueAt(i, j).toString());
+    public void saveAcls(JTable aclList, String currentPath) {
+        EntityTableModel etm = (EntityTableModel) aclList.getModel();
+        List<Entity> entieies = etm.getEntities();
+        
+        try {
+            Process p = Runtime.getRuntime().exec(new String[] { "setfacl", "-b", currentPath });
+        } catch (IOException ex) {
+            Logger.getLogger(FileOperator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        for (Entity entity : entieies) {
+            if (!entity.getType().equals(EntityType.NEW) && !entity.getName().equals("-----")) {
+                String permissions = "";
+                if (entity.isRead()) permissions = permissions.concat("r");
+                if (entity.isWrite()) permissions = permissions.concat("w");
+                if (entity.isExecute()) permissions = permissions.concat("x");
+                if (!permissions.equals("")) {
+                    try {
+                        Process p = Runtime.getRuntime().exec("setfacl -m u:" + entity.getName() + ":" + permissions + " " + currentPath);
+                    } catch (IOException ex) {
+                        Logger.getLogger(FileOperator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
-                System.out.println(entity.toString());
             }
         }
-    }
+    }    
 }
