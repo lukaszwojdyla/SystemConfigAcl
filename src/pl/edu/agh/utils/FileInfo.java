@@ -5,6 +5,7 @@
  */
 package pl.edu.agh.utils;
 
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.apache.commons.io.IOUtils;
@@ -27,10 +30,14 @@ public class FileInfo {
 
     public void genFileInfo(JPanel panel, String path) {
         if (isReadeable(path)) {
-            JLabel currentPath = (JLabel) panel.getComponent(7);
+            JLabel currentPath = (JLabel) panel.getComponent(6);
             JLabel type = (JLabel) panel.getComponent(4);
             JLabel mask = (JLabel) panel.getComponent(5);
-            JLabel flags = (JLabel) panel.getComponent(6);
+            JLabel flags = (JLabel) panel.getComponent(7);
+            JCheckBox readMask = (JCheckBox) panel.getComponent(9);
+            JCheckBox writeMask = (JCheckBox) panel.getComponent(10);          
+            JCheckBox executeMask = (JCheckBox) panel.getComponent(11);
+
             if (path.length() > 50) {
                 currentPath.setText("..." + path.substring(path.lastIndexOf("/")));
             } else {
@@ -39,6 +46,27 @@ public class FileInfo {
             type.setText(getType(path));
             mask.setText(getMask(path));
             flags.setText(getFlags(path));
+            if (mask.getText().equals("")) {
+                readMask.setSelected(false);
+                readMask.setEnabled(false);
+                writeMask.setSelected(false);
+                writeMask.setEnabled(false);                
+                executeMask.setSelected(false);
+                executeMask.setEnabled(false);
+            } else {
+                writeMask.setEnabled(true);
+                readMask.setEnabled(true);
+                executeMask.setEnabled(true);
+                if (getMask(path).contains("r")) {
+                    readMask.setSelected(true);
+                }
+                if (getMask(path).contains("w")) {
+                    writeMask.setSelected(true);
+                }
+                if (getMask(path).contains("x")) {
+                    executeMask.setSelected(true);
+                }
+            }
 
             currentPath.paintImmediately(currentPath.getVisibleRect());
             panel.paintImmediately(panel.getVisibleRect());
@@ -62,7 +90,7 @@ public class FileInfo {
         return output;
     }
 
-    private String getMask(String path) {
+    public String getMask(String path) {
         String output = new String();
 
         try {
@@ -114,7 +142,7 @@ public class FileInfo {
 
     public List<Entity> getAclList(String path) {
         List<Entity> entities = new ArrayList<>();
-        
+
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"getfacl", path});
             int retVal = p.waitFor();
@@ -129,14 +157,20 @@ public class FileInfo {
                                 Entity entity = new Entity();
                                 String permissions = line.split(":")[2];
                                 String user = line.split(":")[1];
-                                              
+
                                 entity.setName(user);
                                 entity.setType(EntityType.USER);
-                                
-                                if (permissions.contains("r")) entity.setRead(true);
-                                if (permissions.contains("w")) entity.setWrite(true);
-                                if (permissions.contains("x")) entity.setExecute(true);
-                                
+
+                                if (permissions.contains("r")) {
+                                    entity.setRead(true);
+                                }
+                                if (permissions.contains("w")) {
+                                    entity.setWrite(true);
+                                }
+                                if (permissions.contains("x")) {
+                                    entity.setExecute(true);
+                                }
+
                                 entities.add(entity);
                             }
                         }
@@ -149,10 +183,10 @@ public class FileInfo {
 
         return entities;
     }
-    
+
     public List<String> getSystemUsers() {
         List<String> users = new ArrayList<>();
-        
+
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"cat", "/etc/passwd"});
             int retVal = p.waitFor();
@@ -169,13 +203,13 @@ public class FileInfo {
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return users;
     }
-    
-        public List<String> getSystemGroups() {
+
+    public List<String> getSystemGroups() {
         List<String> groups = new ArrayList<>();
-        
+
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"cat", "/etc/group"});
             int retVal = p.waitFor();
@@ -192,7 +226,7 @@ public class FileInfo {
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return groups;
     }
 

@@ -20,6 +20,7 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -60,6 +61,9 @@ public class SystemConfigAcl extends JFrame {
         sp = new JScrollPane();
         tree = new JTree(fileSystemModel);
         properties = new JPanel();
+        readMask = new JCheckBox();
+        writeMask = new JCheckBox();
+        executeMask = new JCheckBox();
         pathLabel = new JLabel();
         path = new JLabel();
         typeLabel = new JLabel();
@@ -69,13 +73,14 @@ public class SystemConfigAcl extends JFrame {
         flagsLabel = new JLabel();
         flags = new JLabel();
         acl = new JPanel();
+        setmaskLabel = new JLabel();
         browser = new JScrollPane();
         aclList = new JTable();
         entities = new ArrayList<>();
         List<String> users = fileInfo.getSystemUsers();
 
-        for (EntityType type : EntityType.values()) {
-            typesCombox.addItem(type);
+        for (EntityType entityType : EntityType.values()) {
+            typesCombox.addItem(entityType);
         }
 
         entities = fileInfo.getAclList(currentPath);
@@ -102,6 +107,17 @@ public class SystemConfigAcl extends JFrame {
         flagsLabel.setText("Flags");
         flags.setText("flags");
 
+        setmaskLabel.setText("Set mask:");
+
+        readMask.setText("read");
+        readMask.setEnabled(false);
+
+        writeMask.setText("write");
+        writeMask.setEnabled(false);
+
+        executeMask.setText("execute");
+        executeMask.setEnabled(false);
+
         aclList.setModel(model);
         aclList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -122,24 +138,33 @@ public class SystemConfigAcl extends JFrame {
                 propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(propertiesLayout.createSequentialGroup()
                         .addContainerGap()
-                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
-                                .addComponent(pathLabel, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                                .addComponent(flagsLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                                .addComponent(maskLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(typeLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(type, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(mask, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(flags, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(path, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGroup(propertiesLayout.createSequentialGroup()
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED))
-                ));
+                                .addGroup(propertiesLayout.createSequentialGroup()
+                                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+                                                .addComponent(pathLabel, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
+                                                .addComponent(flagsLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
+                                                .addComponent(maskLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(typeLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                                .addComponent(type, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(mask, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(path, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(flags, GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                .addGroup(propertiesLayout.createSequentialGroup()
+                                        .addComponent(setmaskLabel)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(readMask, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(writeMask, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(executeMask, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                        .addGap(0, 0, Short.MAX_VALUE))))
+        );
         propertiesLayout.setVerticalGroup(
                 propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(propertiesLayout.createSequentialGroup()
-                        .addContainerGap()
+                        .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(pathLabel)
                                 .addComponent(path))
@@ -155,7 +180,12 @@ public class SystemConfigAcl extends JFrame {
                         .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(flagsLabel)
                                 .addComponent(flags))
-                        .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(setmaskLabel)
+                                .addComponent(readMask, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(writeMask, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(executeMask, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
         );
 
         GroupLayout aclLayout = new GroupLayout(acl);
@@ -176,15 +206,13 @@ public class SystemConfigAcl extends JFrame {
         aclLayout.setVerticalGroup(
                 aclLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(aclLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(browser, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addComponent(browser, GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(aclLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(addButton)
                                 .addComponent(removeButton)
                                 .addComponent(updateButton)))
         );
-
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -199,27 +227,28 @@ public class SystemConfigAcl extends JFrame {
         );
         layout.setVerticalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(sp, GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
+                .addComponent(sp)
                 .addGroup(layout.createSequentialGroup()
                         .addComponent(properties, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(acl, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
         );
-        
-                tree.addMouseListener(new MouseAdapter() {
+
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent evt) {
                 treeMouseClicked(evt);
             }
         });
         tree.addKeyListener(new KeyAdapter() {
+            @Override
             public void keyReleased(KeyEvent evt) {
                 treeKeyReleased(evt);
             }
         });
 
         namesCombox.addPopupMenuListener(new PopupMenuListener() {
-
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent evt) {
                 namesComboxPopupVisible(evt);
@@ -227,7 +256,6 @@ public class SystemConfigAcl extends JFrame {
 
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent evt) {
-                namesComboxPopupInvisible(evt);
             }
 
             @Override
@@ -235,14 +263,13 @@ public class SystemConfigAcl extends JFrame {
             }
         });
 
-        typesCombox.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent evt) {
-                typesComboxItemStateChanged(evt);
-            }
+        typesCombox.addItemListener((ItemEvent evt) -> {
+            typesComboxItemStateChanged(evt);
         });
 
         addButton.setText("Add");
         addButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 addButtonMouseClicked(evt);
             }
@@ -250,6 +277,7 @@ public class SystemConfigAcl extends JFrame {
 
         removeButton.setText("Remove");
         removeButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 removeButtonMouseClicked(evt);
             }
@@ -257,6 +285,7 @@ public class SystemConfigAcl extends JFrame {
 
         updateButton.setText("Update");
         updateButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 updateButtonMouseClicked(evt);
             }
@@ -283,9 +312,6 @@ public class SystemConfigAcl extends JFrame {
         }
     }
 
-    /* 
-        
-     */
     private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {
         Entity entity = new Entity("-----", EntityType.NEW);
         entities.add(entity);
@@ -293,6 +319,12 @@ public class SystemConfigAcl extends JFrame {
         aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
         int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
         aclList.setRowSelectionInterval(lastRow, lastRow);
+        writeMask.setEnabled(true);
+        readMask.setEnabled(true);
+        executeMask.setEnabled(true);
+        readMask.setSelected(true);
+        writeMask.setSelected(true);
+        executeMask.setSelected(true);
     }
 
     private void removeButtonMouseClicked(java.awt.event.MouseEvent evt) {
@@ -303,6 +335,15 @@ public class SystemConfigAcl extends JFrame {
             if (aclList.getRowCount() > 0) {
                 int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
                 aclList.setRowSelectionInterval(lastRow, lastRow);
+            }
+
+            if (aclList.getRowCount() == 0) {
+                readMask.setSelected(false);
+                writeMask.setSelected(false);
+                executeMask.setSelected(false);
+                writeMask.setEnabled(false);
+                readMask.setEnabled(false);
+                executeMask.setEnabled(false);
             }
         }
     }
@@ -315,15 +356,15 @@ public class SystemConfigAcl extends JFrame {
     }
 
     private void updateButtonMouseClicked(java.awt.event.MouseEvent evt) {
-        fileOperator.test();
+        fileOperator.saveAcls(aclList);
     }
 
     private void namesComboxPopupVisible(PopupMenuEvent evt) {
         int row = aclList.convertRowIndexToView(aclList.getSelectedRow());
-        EntityType type = (EntityType) aclList.getValueAt(row, 1);
+        EntityType entityType = (EntityType) aclList.getValueAt(row, 1);
         List<String> types = new ArrayList<>();
 
-        switch (type) {
+        switch (entityType) {
             case GROUP:
             case D_GROUP:
                 types.addAll(fileInfo.getSystemGroups());
@@ -337,9 +378,6 @@ public class SystemConfigAcl extends JFrame {
                 break;
         }
         namesCombox.setModel(new DefaultComboBoxModel(types.toArray()));
-    }
-
-    public void namesComboxPopupInvisible(PopupMenuEvent evt) {
     }
 
     private void typesComboxItemStateChanged(ItemEvent evt) {
@@ -365,8 +403,11 @@ public class SystemConfigAcl extends JFrame {
 
     private JPanel acl;
     private JTable aclList;
-    private JComboBox namesCombox = new JComboBox();
-    private JComboBox typesCombox = new JComboBox();
+    private final JComboBox namesCombox = new JComboBox();
+    private final JComboBox typesCombox = new JComboBox();
+    private JCheckBox readMask;
+    private JCheckBox writeMask;
+    private JCheckBox executeMask;
     private List<Entity> entities;
     private EntityTableModel model;
     private JButton addButton;
@@ -377,12 +418,13 @@ public class SystemConfigAcl extends JFrame {
     private JLabel maskLabel;
     private JLabel path;
     private JLabel pathLabel;
+    private JLabel setmaskLabel;
     private JPanel properties;
     private JButton removeButton;
     private JScrollPane sp;
     private JTree tree;
     private final String root = "/";
-    private FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
+    private final FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
     private JLabel type;
     private JLabel typeLabel;
     private JButton updateButton;

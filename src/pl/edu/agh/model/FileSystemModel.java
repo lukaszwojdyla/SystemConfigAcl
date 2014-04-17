@@ -65,7 +65,6 @@ public class FileSystemModel implements TreeModel {
                 break;
             }
         }
-
         return result;
     }
 
@@ -109,7 +108,6 @@ public class FileSystemModel implements TreeModel {
                     .nextElement();
             listener.treeNodesRemoved(e);
         }
-
     }
 
     public void fireTreeNodesChanged(TreeModelEvent e) {
@@ -119,7 +117,6 @@ public class FileSystemModel implements TreeModel {
                     .nextElement();
             listener.treeNodesChanged(e);
         }
-
     }
 
     public void fireTreeStructureChanged(TreeModelEvent e) {
@@ -129,6 +126,5 @@ public class FileSystemModel implements TreeModel {
                     .nextElement();
             listener.treeStructureChanged(e);
         }
-
     }
 }
