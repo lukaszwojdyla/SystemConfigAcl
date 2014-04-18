@@ -21,6 +21,10 @@ public enum DefaultUserType {
     public String toString() {
         return this.value;
     }
+    
+    public String getValue() {
+        return this.value;
+    }
 
     private final String value;
 }

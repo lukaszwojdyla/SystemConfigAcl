@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package pl.edu.agh.utils;
+package pl.edu.agh.utils.libs;
 
 import pl.edu.agh.model.OsType;
 

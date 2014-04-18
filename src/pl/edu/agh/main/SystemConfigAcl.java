@@ -6,6 +6,7 @@
 package pl.edu.agh.main;
 
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -38,15 +39,16 @@ import javax.swing.WindowConstants;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.TreePath;
 import pl.edu.agh.model.DefaultUserType;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityTableModel;
 import pl.edu.agh.model.EntityType;
-import pl.edu.agh.utils.FileInfo;
+import pl.edu.agh.utils.libs.FileInfo;
 import pl.edu.agh.model.FileSystemModel;
 import pl.edu.agh.model.OsType;
-import pl.edu.agh.utils.FileOperator;
-import pl.edu.agh.utils.OsUtils;
+import pl.edu.agh.utils.libs.FileOperator;
+import pl.edu.agh.utils.libs.OsUtils;
 
 /**
  *
@@ -56,15 +58,14 @@ public class SystemConfigAcl extends JFrame {
 
     private JPanel acl;
     private JTable aclList;
-    private final JComboBox namesCombox = new JComboBox();
-    private final JComboBox typesCombox = new JComboBox();
+    private JScrollPane browser;
+    private JComboBox namesCombox;
+    private JComboBox typesCombox;
     private JCheckBox readMask;
     private JCheckBox writeMask;
     private JCheckBox executeMask;
     private List<Entity> entities;
     private EntityTableModel model;
-    private JButton addButton;
-    private JScrollPane browser;
     private JLabel flags;
     private JLabel flagsLabel;
     private JLabel mask;
@@ -73,26 +74,29 @@ public class SystemConfigAcl extends JFrame {
     private JLabel pathLabel;
     private JLabel setmaskLabel;
     private JPanel properties;
+    private JButton addButton;
     private JButton removeButton;
+    private JButton updateButton;
+    private JButton resetButton;
     private JScrollPane sp;
     private JTree tree;
-    private final String root = "/";
-    private final FileSystemModel fileSystemModel = new FileSystemModel(new File(root));
+    private FileSystemModel fileSystemModel;
     private JLabel type;
     private JLabel typeLabel;
-    private JButton updateButton;
-    private String currentPath = root;
-    private final FileOperator fileOperator = new FileOperator();
-    private final FileInfo fileInfo = new FileInfo();
+    private String root;
+    private String currentPath;
+    private FileOperator fileOperator;
+    private FileInfo fileInfo;
+    private List<String> users;
 
     /*
      *
      */
     public SystemConfigAcl() {
         if (OsUtils.getOsType().equals(OsType.Linux)) {
+            initFields();
             initComponents();
             initListeners();
-            fileInfo.genFileInfo(properties, root);
             setLocationRelativeTo(null);
         } else {
             messageBox("System operacyjny " + OsUtils.getOsName() + " nie jest wspierany!", ERROR_MESSAGE);
@@ -110,30 +114,45 @@ public class SystemConfigAcl extends JFrame {
     /*
      *
      */
-    private void initComponents() {
+    private void initFields() {
+        root = "/";
+        currentPath = root;
+        namesCombox = new JComboBox();
+        typesCombox = new JComboBox();
+        fileSystemModel = new FileSystemModel(new File(root));
+        fileOperator = new FileOperator();
+        fileInfo = new FileInfo();
         sp = new JScrollPane();
+        browser = new JScrollPane();
+        aclList = new JTable();
         tree = new JTree(fileSystemModel);
         properties = new JPanel();
+        acl = new JPanel();
         readMask = new JCheckBox();
         writeMask = new JCheckBox();
         executeMask = new JCheckBox();
         addButton = new JButton();
         removeButton = new JButton();
         updateButton = new JButton();
+        resetButton = new JButton();
         pathLabel = new JLabel();
         path = new JLabel();
         typeLabel = new JLabel();
         type = new JLabel();
+        setmaskLabel = new JLabel();
         maskLabel = new JLabel();
         mask = new JLabel();
         flagsLabel = new JLabel();
         flags = new JLabel();
-        acl = new JPanel();
         setmaskLabel = new JLabel();
-        browser = new JScrollPane();
-        aclList = new JTable();
         entities = new ArrayList<>();
-        List<String> users = fileInfo.getSystemUsers();
+        users = fileInfo.getSystemUsers();
+    }
+
+    /*
+     *
+     */
+    private void initComponents() {
 
         for (EntityType entityType : EntityType.values()) {
             typesCombox.addItem(entityType);
@@ -145,6 +164,7 @@ public class SystemConfigAcl extends JFrame {
         addButton.setText("Add");
         removeButton.setText("Remove");
         updateButton.setText("Update");
+        resetButton.setText("Reset");
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("System Config ACL");
@@ -257,7 +277,9 @@ public class SystemConfigAcl extends JFrame {
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                                         .addComponent(removeButton)
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(updateButton)))
+                                        .addComponent(updateButton)
+                                        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(resetButton)))
                         .addGap(0, 0, Short.MAX_VALUE))
         );
         aclLayout.setVerticalGroup(
@@ -268,7 +290,8 @@ public class SystemConfigAcl extends JFrame {
                         .addGroup(aclLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(addButton)
                                 .addComponent(removeButton)
-                                .addComponent(updateButton)))
+                                .addComponent(updateButton)
+                                .addComponent(resetButton)))
         );
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -291,7 +314,8 @@ public class SystemConfigAcl extends JFrame {
                         .addComponent(acl, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
         );
-
+        tree.setSelectionPath(new TreePath(root));
+        printFileInfo();
         pack();
     }
 
@@ -331,97 +355,138 @@ public class SystemConfigAcl extends JFrame {
             typesComboxItemStateChanged(evt);
         });
 
-        addButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        addButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            public void mouseClicked(MouseEvent evt) {
                 addButtonMouseClicked(evt);
             }
         });
 
-        removeButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        removeButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            public void mouseClicked(MouseEvent evt) {
                 removeButtonMouseClicked(evt);
             }
         });
 
-        updateButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        updateButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            public void mouseClicked(MouseEvent evt) {
                 updateButtonMouseClicked(evt);
+            }
+        });
+
+        resetButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+                resetButtonMouseClicked(evt);
+            }
+        });
+
+        readMask.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+
+            }
+        });
+
+        writeMask.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+
+            }
+        });
+
+        executeMask.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent evt) {
+                test(evt);
             }
         });
     }
 
-    /*
-     *
-     */
-    private void treeMouseClicked(java.awt.event.MouseEvent evt) {
-        List<Entity> list = new ArrayList<>();
-        if (tree.getSelectionPath() != null) {
-            currentPath = tree.getSelectionPath().getLastPathComponent().toString();
+    private void test(ItemEvent evt) {
+        EntityTableModel etm = (EntityTableModel) aclList.getModel();
+        List<Entity> entities1 = etm.getEntities();
+        if (evt.getStateChange() == ItemEvent.DESELECTED) {
+            for (Entity entity : entities1) {
+                if (entity.isExecute()) {
+                    entity.setExecute(false);
+                }
+            }
+//            etm.disableColumn(4);
+            /*            aclList.getColumnModel().getColumn(3).setCellRenderer(new TableCellRenderer() {
+             @Override
+             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean isFocused, int row, int col) {
+             JCheckBox rendererComponent = new JCheckBox();
+
+             rendererComponent.setEnabled(false);
+             rendererComponent.setHorizontalAlignment(SwingConstants.CENTER);
+
+             return rendererComponent;
+             }
+             });*/
+        } else {
+//            etm.enableColumn(3);
+            /*            aclList.getColumnModel().getColumn(3).setCellRenderer(new TableCellRenderer() {
+             @Override
+             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean isFocused, int row, int col) {
+             JCheckBox rendererComponent = new JCheckBox();
+
+             rendererComponent.setEnabled(true);
+             rendererComponent.setHorizontalAlignment(SwingConstants.CENTER);
+
+             return rendererComponent;
+             }
+             });*/
         }
-        list.addAll(fileInfo.getAclList(currentPath));
-        fileInfo.genFileInfo(properties, currentPath);
-        namesCombox.setSelectedIndex(-1);
-        typesCombox.setSelectedIndex(-1);
-        entities.clear();
-        entities.addAll(list);
         aclList.updateUI();
-        if (list.size() > 0) {
-            int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
-            aclList.setRowSelectionInterval(lastRow, lastRow);
+    }
+
+    private void treeMouseClicked(MouseEvent evt) {
+        if (!currentPath.equals(tree.getSelectionPath().getLastPathComponent().toString())) {
+            printFileInfo();
         }
     }
 
-    /*
-     *
-     */
-    private void addButtonMouseClicked(java.awt.event.MouseEvent evt) {
+    private void addButtonMouseClicked(MouseEvent evt) {
         Entity entity = new Entity(DefaultUserType.DEFAULT.toString(), EntityType.NEW);
         entities.add(entity);
         aclList.updateUI();
-        aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
-        int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
-        aclList.setRowSelectionInterval(lastRow, lastRow);
-        writeMask.setEnabled(true);
-        readMask.setEnabled(true);
-        executeMask.setEnabled(true);
-        readMask.setSelected(true);
-        writeMask.setSelected(true);
-        executeMask.setSelected(true);
+        goToLastRow();
+        enableSetMask();
     }
 
-    private void removeButtonMouseClicked(java.awt.event.MouseEvent evt) {
+    private void removeButtonMouseClicked(MouseEvent evt) {
         int row = aclList.getSelectedRow();
         if (row >= 0 && row < aclList.getRowCount()) {
             entities.remove(row);
             aclList.updateUI();
             if (aclList.getRowCount() > 0) {
-                int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
-                aclList.setRowSelectionInterval(lastRow, lastRow);
+                goToLastRow();
             }
-
             if (aclList.getRowCount() == 0) {
-                readMask.setSelected(false);
-                writeMask.setSelected(false);
-                executeMask.setSelected(false);
-                writeMask.setEnabled(false);
-                readMask.setEnabled(false);
-                executeMask.setEnabled(false);
+                disableSetMask();
             }
         }
     }
 
-    private void treeKeyReleased(java.awt.event.KeyEvent evt) {
-        if (tree.getSelectionPath() != null) {
-            currentPath = tree.getSelectionPath().getLastPathComponent().toString();
-        }
-        fileInfo.genFileInfo(properties, currentPath);
+    private void updateButtonMouseClicked(MouseEvent evt) {
+        String newMask = "";
+//        if (readMask.) newMask = newMask.concat("r");
+
+        newMask = "rwx";
+        fileOperator.saveAcls(entities, newMask, currentPath);
     }
 
-    private void updateButtonMouseClicked(java.awt.event.MouseEvent evt) {
-        fileOperator.saveAcls(aclList, currentPath);
+    private void resetButtonMouseClicked(MouseEvent evt) {
+        printFileInfo();
+    }
+
+    private void treeKeyReleased(KeyEvent evt) {
+        if (!currentPath.equals(tree.getSelectionPath().getLastPathComponent().toString())) {
+            printFileInfo();
+        }
     }
 
     private void namesComboxPopupVisible(PopupMenuEvent evt) {
@@ -448,8 +513,40 @@ public class SystemConfigAcl extends JFrame {
     private void typesComboxItemStateChanged(ItemEvent evt) {
         if (evt.getStateChange() == ItemEvent.SELECTED) {
             int row = aclList.getSelectedRow();
-            aclList.getModel().setValueAt(DefaultUserType.DEFAULT, row, 0);
+            aclList.getModel().setValueAt(DefaultUserType.DEFAULT.toString(), row, 0);
         }
+    }
+
+    private void disableSetMask() {
+        readMask.setSelected(false);
+        writeMask.setSelected(false);
+        executeMask.setSelected(false);
+        writeMask.setEnabled(false);
+        readMask.setEnabled(false);
+        executeMask.setEnabled(false);
+    }
+
+    private void enableSetMask() {
+        writeMask.setEnabled(true);
+        readMask.setEnabled(true);
+        executeMask.setEnabled(true);
+        readMask.setSelected(true);
+        writeMask.setSelected(true);
+        executeMask.setSelected(true);
+    }
+
+    private void goToLastRow() {
+        int lastRow = aclList.convertRowIndexToView(aclList.getRowCount() - 1);
+        aclList.scrollRectToVisible(aclList.getCellRect(aclList.getRowCount() - 1, aclList.getColumnCount(), true));
+        aclList.setRowSelectionInterval(lastRow, lastRow);
+    }
+
+    private void printFileInfo() {
+        currentPath = tree.getSelectionPath().getLastPathComponent().toString();
+        fileInfo.getInfoFromFS(entities, path, type, mask, flags, readMask, writeMask, executeMask, currentPath);
+        namesCombox.setSelectedIndex(-1);
+        typesCombox.setSelectedIndex(-1);
+        aclList.updateUI();
     }
 
     /**

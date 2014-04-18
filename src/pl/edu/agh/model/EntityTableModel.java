@@ -5,6 +5,7 @@
  */
 package pl.edu.agh.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
@@ -15,8 +16,8 @@ import javax.swing.table.AbstractTableModel;
 public class EntityTableModel extends AbstractTableModel {
 
     private List<Entity> entities;
-    private final String[] columnNames = {"Name", "Type", "Read", "Execute", "Write"
-    };
+    private final String[] columnNames = {"Name", "Type", "Read", "Write", "Execute"};
+    private List<Integer> disabledColumns = new ArrayList<Integer>();
 
     public EntityTableModel(List<Entity> entities) {
         this.entities = entities;
@@ -51,6 +52,9 @@ public class EntityTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int col) {
+        if (disabledColumns.contains(col)) {
+            return false;
+        }
         return true;
     }
 
@@ -60,6 +64,14 @@ public class EntityTableModel extends AbstractTableModel {
         entity.updateField(value, columnIndex);
         entities.set(rowIndex, entity);
         fireTableCellUpdated(rowIndex, columnIndex);
+    }
+    
+    public void disableColumn(int col) {
+        disabledColumns.add(col);
+    }
+    
+    public void enableColumn(int col) {
+        disabledColumns.remove((Integer) col);
     }
     
     public void setEntities(List<Entity> entities) {
