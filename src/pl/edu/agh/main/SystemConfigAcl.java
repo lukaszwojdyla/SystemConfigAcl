@@ -6,7 +6,6 @@
 package pl.edu.agh.main;
 
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -37,9 +36,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 import pl.edu.agh.model.DefaultUserType;
@@ -51,6 +48,9 @@ import pl.edu.agh.model.FileSystemModel;
 import pl.edu.agh.model.OsType;
 import pl.edu.agh.utils.lib.FileOperator;
 import pl.edu.agh.utils.lib.OsUtils;
+import javax.swing.event.TreeWillExpandListener;
+import pl.edu.agh.model.CellRenderer;
+import pl.edu.agh.model.PermissionType;
 
 /**
  *
@@ -209,6 +209,7 @@ public class SystemConfigAcl extends JFrame {
         DefaultCellEditor editor2 = new DefaultCellEditor(typesCombox);
         editor2.setClickCountToStart(2);
         tc2.setCellEditor(editor2);
+
         browser.setViewportView(aclList);
 
         GroupLayout propertiesLayout = new GroupLayout(properties);
@@ -325,23 +326,18 @@ public class SystemConfigAcl extends JFrame {
      *
      */
     private void initListeners() {
-        tree.addTreeSelectionListener(new TreeSelectionListener() {
-
-            @Override
-            public void valueChanged(TreeSelectionEvent evt) {
-                treeSelected(evt);
-            }
+        tree.addTreeSelectionListener((TreeSelectionEvent evt) -> {
+            treeSelected(evt);
         });
 
-        tree.addTreeExpansionListener(new TreeExpansionListener() {
-
+        tree.addTreeWillExpandListener(new TreeWillExpandListener() {
             @Override
-            public void treeExpanded(TreeExpansionEvent evt) {
+            public void treeWillExpand(TreeExpansionEvent evt) {
                 treeChanged(evt);
             }
 
             @Override
-            public void treeCollapsed(TreeExpansionEvent evt) {
+            public void treeWillCollapse(TreeExpansionEvent evt) {
                 treeChanged(evt);
             }
         });
@@ -393,64 +389,44 @@ public class SystemConfigAcl extends JFrame {
             }
         });
 
-        readMask.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent evt) {
-
-            }
+        readMask.addItemListener((ItemEvent evt) -> {
+            changeMaskAndRepaint(evt, PermissionType.READ);
         });
 
-        writeMask.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent evt) {
-
-            }
+        writeMask.addItemListener((ItemEvent evt) -> {
+            changeMaskAndRepaint(evt, PermissionType.WRITE);
         });
 
-        executeMask.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent evt) {
-                test(evt);
-            }
+        executeMask.addItemListener((ItemEvent evt) -> {
+            changeMaskAndRepaint(evt, PermissionType.EXECUTE);
         });
     }
 
-    private void test(ItemEvent evt) {
-        EntityTableModel etm = (EntityTableModel) aclList.getModel();
-        List<Entity> entities1 = etm.getEntities();
-        if (evt.getStateChange() == ItemEvent.DESELECTED) {
-            for (Entity entity : entities1) {
-                if (entity.isExecute()) {
-                    entity.setExecute(false);
-                }
-            }
-//            etm.disableColumn(4);
-            /*            aclList.getColumnModel().getColumn(3).setCellRenderer(new TableCellRenderer() {
-             @Override
-             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean isFocused, int row, int col) {
-             JCheckBox rendererComponent = new JCheckBox();
-
-             rendererComponent.setEnabled(false);
-             rendererComponent.setHorizontalAlignment(SwingConstants.CENTER);
-
-             return rendererComponent;
-             }
-             });*/
-        } else {
-//            etm.enableColumn(3);
-            /*            aclList.getColumnModel().getColumn(3).setCellRenderer(new TableCellRenderer() {
-             @Override
-             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean isFocused, int row, int col) {
-             JCheckBox rendererComponent = new JCheckBox();
-
-             rendererComponent.setEnabled(true);
-             rendererComponent.setHorizontalAlignment(SwingConstants.CENTER);
-
-             return rendererComponent;
-             }
-             });*/
+    private void changeMaskAndRepaint(ItemEvent evt, PermissionType persmissionType) {
+        Boolean deselected = false;
+        int column = 0;
+        
+        if (evt.getStateChange() == ItemEvent.DESELECTED)
+             deselected = true;
+        
+        switch (persmissionType) {
+            case READ:
+                column = 2;
+                break;
+            case WRITE:
+                column = 3;
+                break;
+            case EXECUTE:
+                column = 4;
+                break;
         }
-        aclList.updateUI();
+        
+        if (column != 0) {
+            for (Entity entity : entities) {
+                aclList.getColumnModel().getColumn(column).setCellRenderer(new CellRenderer(deselected));
+            }
+            aclList.updateUI();
+        }
     }
 
     private void treeSelected(TreeSelectionEvent evt) {
@@ -463,11 +439,13 @@ public class SystemConfigAcl extends JFrame {
     }
 
     private void addButtonMouseClicked(MouseEvent evt) {
+        if (aclList.getRowCount() == 0) {
+            enableSetMask();
+        }
         Entity entity = new Entity(DefaultUserType.DEFAULT.toString(), EntityType.NEW);
         entities.add(entity);
         aclList.updateUI();
         goToLastRow();
-        enableSetMask();
     }
 
     private void removeButtonMouseClicked(MouseEvent evt) {
@@ -486,10 +464,23 @@ public class SystemConfigAcl extends JFrame {
 
     private void updateButtonMouseClicked(MouseEvent evt) {
         String newMask = "";
-//        if (readMask.) newMask = newMask.concat("r");
-
-        newMask = "rwx";
+        if (readMask.isSelected()) {
+            newMask = newMask.concat("r");
+        } else {
+            newMask = newMask.concat("-");
+        }
+        if (writeMask.isSelected()) {
+            newMask = newMask.concat("w");
+        } else {
+            newMask = newMask.concat("-");
+        }
+        if (executeMask.isSelected()) {
+            newMask = newMask.concat("x");
+        } else {
+            newMask = newMask.concat("-");
+        }
         fileOperator.saveAcls(entities, newMask, currentPath);
+        printFileInfo();
     }
 
     private void resetButtonMouseClicked(MouseEvent evt) {
@@ -561,8 +552,10 @@ public class SystemConfigAcl extends JFrame {
     public static void main(String args[]) {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(SystemConfigAcl.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SystemConfigAcl.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         SwingUtilities.invokeLater(() -> {
             new SystemConfigAcl().setVisible(true);

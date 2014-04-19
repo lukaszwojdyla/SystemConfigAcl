@@ -39,8 +39,7 @@ public class FileSystemModel implements TreeModel {
     @Override
     public Object getChild(Object parent, int index) {
         File directory = (File) parent;
-        List<File> children = getSortedChildren(directory);
-        return new File(directory, children.get(index).getName());
+        return new File(directory, getSortedChildren(directory).get(index).getName());
     }
 
     @Override
@@ -96,20 +95,16 @@ public class FileSystemModel implements TreeModel {
     }
 
     private List<File> getSortedChildren(File node) {
-        List<File> children = Arrays.asList(node.listFiles());
-        Collections.sort(children, (File o1, File o2) -> {
-            if (o1.isDirectory() == o2.isDirectory()) {
-                return o1.getName().compareTo(o2.getName());
-            }
-
-            if (o1.isDirectory()) {
-                return -1;
-            }
-
-            return 1;
+        File[] children = node.listFiles();
+        Arrays.parallelSort(children, (File o1, File o2) -> {
+            if (o1.isDirectory())
+                return o2.isDirectory() ? o1.compareTo(o2) : -1;
+            else if (o2.isDirectory())
+                return 1;
+            
+            return o1.compareTo(o2);
         });
-
-        return children;
+        return Arrays.asList(children);
     }
 
     public void fireTreeNodesInserted(TreeModelEvent e) {

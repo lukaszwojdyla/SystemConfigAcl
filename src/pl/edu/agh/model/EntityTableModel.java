@@ -7,7 +7,9 @@ package pl.edu.agh.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.DefaultCellEditor;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 
 /**
  *
@@ -64,14 +66,6 @@ public class EntityTableModel extends AbstractTableModel {
         entity.updateField(value, columnIndex);
         entities.set(rowIndex, entity);
         fireTableCellUpdated(rowIndex, columnIndex);
-    }
-    
-    public void disableColumn(int col) {
-        disabledColumns.add(col);
-    }
-    
-    public void enableColumn(int col) {
-        disabledColumns.remove((Integer) col);
     }
     
     public void setEntities(List<Entity> entities) {
