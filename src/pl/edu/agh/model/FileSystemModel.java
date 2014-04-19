@@ -6,8 +6,12 @@
 package pl.edu.agh.model;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.Vector;
+import java.util.List;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -18,12 +22,13 @@ import javax.swing.tree.TreePath;
  * @author lukasz
  */
 public class FileSystemModel implements TreeModel {
+
     private final File root;
-    private final Vector<TreeModelListener> listeners;
+    private final ArrayList<TreeModelListener> listeners;
 
     public FileSystemModel(File rootDirectory) {
         root = rootDirectory;
-        listeners = new Vector<TreeModelListener>();
+        listeners = new ArrayList<>();
     }
 
     @Override
@@ -34,15 +39,15 @@ public class FileSystemModel implements TreeModel {
     @Override
     public Object getChild(Object parent, int index) {
         File directory = (File) parent;
-        String[] directoryMembers = directory.list();
-        return (new File(directory, directoryMembers[index]));
+        List<File> children = getSortedChildren(directory);
+        return new File(directory, children.get(index).getName());
     }
 
     @Override
     public int getChildCount(Object parent) {
         File fileSystemMember = (File) parent;
         if (fileSystemMember.isDirectory()) {
-            String[] directoryMembers = fileSystemMember.list();
+            File[] directoryMembers = fileSystemMember.listFiles();
             if (directoryMembers == null) {
                 return 0;
             }
@@ -56,34 +61,32 @@ public class FileSystemModel implements TreeModel {
     public int getIndexOfChild(Object parent, Object child) {
         File directory = (File) parent;
         File directoryMember = (File) child;
-        String[] directoryMemberNames = directory.list();
-        int result = -1;
 
-        for (int i = 0; i < directoryMemberNames.length; ++i) {
-            if (directoryMember.getName().equals(directoryMemberNames[i])) {
-                result = i;
-                break;
-            }
-        }
-        return result;
+        List<File> children = getSortedChildren(directory);
+
+        return children.indexOf(directoryMember);
     }
 
     @Override
     public boolean isLeaf(Object node) {
-        return ((File) node).isFile();
+        /*
+         * return ((File) node).isFile();
+         * returns char device as directory
+         */
+        return !((File) node).isDirectory();
     }
 
     @Override
     public void addTreeModelListener(TreeModelListener l) {
         if (l != null && !listeners.contains(l)) {
-            listeners.addElement(l);
+            listeners.add(l);
         }
     }
 
     @Override
     public void removeTreeModelListener(TreeModelListener l) {
         if (l != null) {
-            listeners.removeElement(l);
+            listeners.remove(l);
         }
     }
 
@@ -92,8 +95,25 @@ public class FileSystemModel implements TreeModel {
         // Does Nothing!
     }
 
+    private List<File> getSortedChildren(File node) {
+        List<File> children = Arrays.asList(node.listFiles());
+        Collections.sort(children, (File o1, File o2) -> {
+            if (o1.isDirectory() == o2.isDirectory()) {
+                return o1.getName().compareTo(o2.getName());
+            }
+
+            if (o1.isDirectory()) {
+                return -1;
+            }
+
+            return 1;
+        });
+
+        return children;
+    }
+
     public void fireTreeNodesInserted(TreeModelEvent e) {
-        Enumeration<TreeModelListener> listenerCount = listeners.elements();
+        Enumeration<TreeModelListener> listenerCount = Collections.enumeration(listeners);
         while (listenerCount.hasMoreElements()) {
             TreeModelListener listener = (TreeModelListener) listenerCount
                     .nextElement();
@@ -102,7 +122,7 @@ public class FileSystemModel implements TreeModel {
     }
 
     public void fireTreeNodesRemoved(TreeModelEvent e) {
-        Enumeration<TreeModelListener> listenerCount = listeners.elements();
+        Enumeration<TreeModelListener> listenerCount = Collections.enumeration(listeners);
         while (listenerCount.hasMoreElements()) {
             TreeModelListener listener = (TreeModelListener) listenerCount
                     .nextElement();
@@ -111,7 +131,7 @@ public class FileSystemModel implements TreeModel {
     }
 
     public void fireTreeNodesChanged(TreeModelEvent e) {
-        Enumeration<TreeModelListener> listenerCount = listeners.elements();
+        Enumeration<TreeModelListener> listenerCount = Collections.enumeration(listeners);
         while (listenerCount.hasMoreElements()) {
             TreeModelListener listener = (TreeModelListener) listenerCount
                     .nextElement();
@@ -120,7 +140,7 @@ public class FileSystemModel implements TreeModel {
     }
 
     public void fireTreeStructureChanged(TreeModelEvent e) {
-        Enumeration<TreeModelListener> listenerCount = listeners.elements();
+        Enumeration<TreeModelListener> listenerCount = Collections.enumeration(listeners);
         while (listenerCount.hasMoreElements()) {
             TreeModelListener listener = (TreeModelListener) listenerCount
                     .nextElement();

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package pl.edu.agh.utils.libs;
+package pl.edu.agh.utils.lib;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +40,11 @@ public class FileInfo {
             } else {
                 jPath.setText(currentPath);
             }
-            jType.setText(type);
+            if (type.length() > 60) {
+                jType.setText(type.substring(0, 56) + "...");
+            } else {
+                jType.setText(type);
+            }
             jMask.setText(mask);
             jFlags.setText(flags);
 

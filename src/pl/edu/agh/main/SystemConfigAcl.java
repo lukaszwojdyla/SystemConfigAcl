@@ -7,8 +7,6 @@ package pl.edu.agh.main;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -38,17 +36,21 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 import pl.edu.agh.model.DefaultUserType;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityTableModel;
 import pl.edu.agh.model.EntityType;
-import pl.edu.agh.utils.libs.FileInfo;
+import pl.edu.agh.utils.lib.FileInfo;
 import pl.edu.agh.model.FileSystemModel;
 import pl.edu.agh.model.OsType;
-import pl.edu.agh.utils.libs.FileOperator;
-import pl.edu.agh.utils.libs.OsUtils;
+import pl.edu.agh.utils.lib.FileOperator;
+import pl.edu.agh.utils.lib.OsUtils;
 
 /**
  *
@@ -323,16 +325,24 @@ public class SystemConfigAcl extends JFrame {
      *
      */
     private void initListeners() {
-        tree.addMouseListener(new MouseAdapter() {
+        tree.addTreeSelectionListener(new TreeSelectionListener() {
+
             @Override
-            public void mouseClicked(MouseEvent evt) {
-                treeMouseClicked(evt);
+            public void valueChanged(TreeSelectionEvent evt) {
+                treeSelected(evt);
             }
         });
-        tree.addKeyListener(new KeyAdapter() {
+
+        tree.addTreeExpansionListener(new TreeExpansionListener() {
+
             @Override
-            public void keyReleased(KeyEvent evt) {
-                treeKeyReleased(evt);
+            public void treeExpanded(TreeExpansionEvent evt) {
+                treeChanged(evt);
+            }
+
+            @Override
+            public void treeCollapsed(TreeExpansionEvent evt) {
+                treeChanged(evt);
             }
         });
 
@@ -443,10 +453,13 @@ public class SystemConfigAcl extends JFrame {
         aclList.updateUI();
     }
 
-    private void treeMouseClicked(MouseEvent evt) {
-        if (!currentPath.equals(tree.getSelectionPath().getLastPathComponent().toString())) {
-            printFileInfo();
-        }
+    private void treeSelected(TreeSelectionEvent evt) {
+        currentPath = evt.getPath().getLastPathComponent().toString();
+        printFileInfo();
+    }
+
+    private void treeChanged(TreeExpansionEvent evt) {
+        currentPath = evt.getPath().getLastPathComponent().toString();
     }
 
     private void addButtonMouseClicked(MouseEvent evt) {
@@ -481,12 +494,6 @@ public class SystemConfigAcl extends JFrame {
 
     private void resetButtonMouseClicked(MouseEvent evt) {
         printFileInfo();
-    }
-
-    private void treeKeyReleased(KeyEvent evt) {
-        if (!currentPath.equals(tree.getSelectionPath().getLastPathComponent().toString())) {
-            printFileInfo();
-        }
     }
 
     private void namesComboxPopupVisible(PopupMenuEvent evt) {
@@ -542,7 +549,6 @@ public class SystemConfigAcl extends JFrame {
     }
 
     private void printFileInfo() {
-        currentPath = tree.getSelectionPath().getLastPathComponent().toString();
         fileInfo.getInfoFromFS(entities, path, type, mask, flags, readMask, writeMask, executeMask, currentPath);
         namesCombox.setSelectedIndex(-1);
         typesCombox.setSelectedIndex(-1);

@@ -17,7 +17,7 @@ public class EntityTableModel extends AbstractTableModel {
 
     private List<Entity> entities;
     private final String[] columnNames = {"Name", "Type", "Read", "Write", "Execute"};
-    private List<Integer> disabledColumns = new ArrayList<Integer>();
+    private final List<Integer> disabledColumns = new ArrayList<>();
 
     public EntityTableModel(List<Entity> entities) {
         this.entities = entities;
