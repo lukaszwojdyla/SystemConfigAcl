@@ -49,7 +49,7 @@ import pl.edu.agh.model.OsType;
 import pl.edu.agh.utils.lib.FileOperator;
 import pl.edu.agh.utils.lib.OsUtils;
 import javax.swing.event.TreeWillExpandListener;
-import pl.edu.agh.model.CellRenderer;
+import pl.edu.agh.model.MaskCellRenderer;
 import pl.edu.agh.model.PermissionType;
 
 /**

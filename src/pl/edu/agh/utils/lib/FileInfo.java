@@ -17,7 +17,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import org.apache.commons.io.IOUtils;
-import pl.edu.agh.model.CellRenderer;
+import pl.edu.agh.model.MaskCellRenderer;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityType;
 import pl.edu.agh.model.PermissionType;
@@ -98,7 +98,7 @@ public class FileInfo {
 
         if (column != 0) {
             for (Entity entity : entities) {
-                aclList.getColumnModel().getColumn(column).setCellRenderer(new CellRenderer(deselected));
+                aclList.getColumnModel().getColumn(column).setCellRenderer(new MaskCellRenderer(deselected));
             }
             aclList.updateUI();
         }

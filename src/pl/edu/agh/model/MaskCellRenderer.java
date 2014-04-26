@@ -16,11 +16,11 @@ import javax.swing.table.TableCellRenderer;
  *
  * @author lukasz
  */
-public class CellRenderer extends JCheckBox implements TableCellRenderer {
+public class MaskCellRenderer extends JCheckBox implements TableCellRenderer {
 
     private final boolean deselected;
 
-    public CellRenderer(Boolean deselected) {
+    public MaskCellRenderer(Boolean deselected) {
         super();
         setOpaque(true);
         setHorizontalAlignment(JLabel.CENTER);
