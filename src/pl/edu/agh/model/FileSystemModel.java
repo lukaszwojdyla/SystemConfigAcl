@@ -9,7 +9,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import javax.swing.event.TreeModelEvent;
@@ -70,7 +69,7 @@ public class FileSystemModel implements TreeModel {
     public boolean isLeaf(Object node) {
         /*
          * return ((File) node).isFile();
-         * returns char device as directory
+         * returns char devices as directory
          */
         return !((File) node).isDirectory();
     }

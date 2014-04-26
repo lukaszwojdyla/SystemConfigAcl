@@ -15,9 +15,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JTable;
 import org.apache.commons.io.IOUtils;
+import pl.edu.agh.model.CellRenderer;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityType;
+import pl.edu.agh.model.PermissionType;
 
 /**
  *
@@ -25,7 +28,7 @@ import pl.edu.agh.model.EntityType;
  */
 public class FileInfo {
 
-    public void getInfoFromFS(List<Entity> entities, JLabel jPath, JLabel jType,
+    public void getInfoFromFS(List<Entity> entities, JTable aclList, JLabel jPath, JLabel jType,
             JLabel jMask, JLabel jFlags, JCheckBox jReadMask, JCheckBox jWriteMask, JCheckBox jExecuteMask, String currentPath) {
         if (isReadeable(currentPath)) {
             String type = getType(currentPath);
@@ -61,14 +64,43 @@ public class FileInfo {
                 jExecuteMask.setEnabled(true);
                 if (mask.contains("r")) {
                     jReadMask.setSelected(true);
+                } else {
+                    columnBacklight(PermissionType.READ, true, aclList, entities);
                 }
                 if (mask.contains("w")) {
                     jWriteMask.setSelected(true);
+                } else {
+                    columnBacklight(PermissionType.WRITE, true, aclList, entities);
                 }
                 if (mask.contains("x")) {
                     jExecuteMask.setSelected(true);
+                }else {
+                    columnBacklight(PermissionType.EXECUTE, true, aclList, entities);
                 }
             }
+        }
+    }
+
+    public void columnBacklight(PermissionType permissionType, Boolean deselected, JTable aclList, List<Entity> entities) {
+        int column = 0;
+
+        switch (permissionType) {
+            case READ:
+                column = 2;
+                break;
+            case WRITE:
+                column = 3;
+                break;
+            case EXECUTE:
+                column = 4;
+                break;
+        }
+
+        if (column != 0) {
+            for (Entity entity : entities) {
+                aclList.getColumnModel().getColumn(column).setCellRenderer(new CellRenderer(deselected));
+            }
+            aclList.updateUI();
         }
     }
 

@@ -402,31 +402,14 @@ public class SystemConfigAcl extends JFrame {
         });
     }
 
-    private void changeMaskAndRepaint(ItemEvent evt, PermissionType persmissionType) {
+    private void changeMaskAndRepaint(ItemEvent evt, PermissionType permissionType) {
         Boolean deselected = false;
-        int column = 0;
-        
-        if (evt.getStateChange() == ItemEvent.DESELECTED)
-             deselected = true;
-        
-        switch (persmissionType) {
-            case READ:
-                column = 2;
-                break;
-            case WRITE:
-                column = 3;
-                break;
-            case EXECUTE:
-                column = 4;
-                break;
+
+        if (evt.getStateChange() == ItemEvent.DESELECTED) {
+            deselected = true;
         }
-        
-        if (column != 0) {
-            for (Entity entity : entities) {
-                aclList.getColumnModel().getColumn(column).setCellRenderer(new CellRenderer(deselected));
-            }
-            aclList.updateUI();
-        }
+
+        fileInfo.columnBacklight(permissionType, deselected, aclList, entities);
     }
 
     private void treeSelected(TreeSelectionEvent evt) {
@@ -540,7 +523,7 @@ public class SystemConfigAcl extends JFrame {
     }
 
     private void printFileInfo() {
-        fileInfo.getInfoFromFS(entities, path, type, mask, flags, readMask, writeMask, executeMask, currentPath);
+        fileInfo.getInfoFromFS(entities, aclList, path, type, mask, flags, readMask, writeMask, executeMask, currentPath);
         namesCombox.setSelectedIndex(-1);
         typesCombox.setSelectedIndex(-1);
         aclList.updateUI();

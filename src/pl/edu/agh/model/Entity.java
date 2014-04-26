@@ -48,7 +48,15 @@ public class Entity {
     public void setRead(boolean read) {
         this.read = read;
     }
+    
+    public boolean isWrite() {
+        return write;
+    }
 
+    public void setWrite(boolean write) {
+        this.write = write;
+    }
+    
     public boolean isExecute() {
         return execute;
     }
@@ -57,16 +65,8 @@ public class Entity {
         this.execute = execute;
     }
 
-    public boolean isWrite() {
-        return write;
-    }
-
-    public void setWrite(boolean write) {
-        this.write = write;
-    }
-
     public Object[] getFields() {
-        return new Object[] { name, type, read, execute, write };
+        return new Object[] { name, type, read, write,  execute };
     }
     
     public void updateField(Object value, int columnIndex) {
@@ -81,10 +81,10 @@ public class Entity {
                 read = (Boolean) value;
                 break;
             case 3:
-                execute = (Boolean) value;
+                write = (Boolean) value;         
                 break;
             case 4:
-                write = (Boolean) value;
+                execute = (Boolean) value;
                 break;
         }
     }
