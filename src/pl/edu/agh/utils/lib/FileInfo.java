@@ -252,6 +252,21 @@ public class FileInfo {
 
         return entities;
     }
+    
+    public String getOwner(String path) {
+        String owner = "";
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"getfacl", path});
+            int retVal = p.waitFor();
+            if (retVal == 0) {
+                
+            }
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return owner;
+    }
 
     public List<String> getSystemUsers() {
         List<String> users = new ArrayList<>();
