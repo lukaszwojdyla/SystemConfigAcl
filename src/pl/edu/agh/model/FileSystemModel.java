@@ -69,7 +69,7 @@ public class FileSystemModel implements TreeModel {
     public boolean isLeaf(Object node) {
         /*
          * return ((File) node).isFile();
-         * returns char devices as directory
+         * returns char device as directory
          */
         return !((File) node).isDirectory();
     }
