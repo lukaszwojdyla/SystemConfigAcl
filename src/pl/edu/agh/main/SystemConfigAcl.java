@@ -1,7 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in 
+/* 
+ * Copyright (C) 2014 lukasz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package pl.edu.agh.main;
 
@@ -46,11 +57,11 @@ import pl.edu.agh.model.EntityType;
 import pl.edu.agh.utils.lib.FileInfo;
 import pl.edu.agh.model.FileSystemModel;
 import pl.edu.agh.model.OsType;
-import pl.edu.agh.utils.lib.FileOperator;
+import pl.edu.agh.utils.lib.AclOperator;
 import pl.edu.agh.utils.lib.OsUtils;
 import javax.swing.event.TreeWillExpandListener;
-import pl.edu.agh.model.MaskCellRenderer;
 import pl.edu.agh.model.PermissionType;
+import pl.edu.agh.utils.lib.SystemInfo;
 
 /**
  *
@@ -85,15 +96,16 @@ public class SystemConfigAcl extends JFrame {
     private FileSystemModel fileSystemModel;
     private JLabel type;
     private JLabel typeLabel;
-    private String root;
+    private String rootPath;
     private String currentPath;
-    private FileOperator fileOperator;
+    private AclOperator aclOperator;
     private FileInfo fileInfo;
+    private SystemInfo systemInfo;
     private List<String> users;
 
-    /*
+    /**
      *
-     */
+     */   
     public SystemConfigAcl() {
         if (OsUtils.getOsType().equals(OsType.Linux)) {
             initFields();
@@ -117,12 +129,12 @@ public class SystemConfigAcl extends JFrame {
      *
      */
     private void initFields() {
-        root = "/";
-        currentPath = root;
+        rootPath = "/";
+        currentPath = rootPath;
         namesCombox = new JComboBox();
         typesCombox = new JComboBox();
-        fileSystemModel = new FileSystemModel(new File(root));
-        fileOperator = new FileOperator();
+        fileSystemModel = new FileSystemModel(new File(rootPath));
+        aclOperator = new AclOperator();
         fileInfo = new FileInfo();
         sp = new JScrollPane();
         browser = new JScrollPane();
@@ -148,7 +160,7 @@ public class SystemConfigAcl extends JFrame {
         flags = new JLabel();
         setmaskLabel = new JLabel();
         entities = new ArrayList<>();
-        users = fileInfo.getSystemUsers();
+        users = systemInfo.getSystemUsers();
     }
 
     /*
@@ -160,7 +172,7 @@ public class SystemConfigAcl extends JFrame {
             typesCombox.addItem(entityType);
         }
 
-        entities = fileInfo.getAclList(currentPath);
+        entities = aclOperator.getAclList(currentPath);
         model = new EntityTableModel(entities);
 
         addButton.setText("Add");
@@ -317,7 +329,7 @@ public class SystemConfigAcl extends JFrame {
                         .addComponent(acl, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
         );
-        tree.setSelectionPath(new TreePath(root));
+        tree.setSelectionPath(new TreePath(rootPath));
         printFileInfo();
         pack();
     }
@@ -462,7 +474,7 @@ public class SystemConfigAcl extends JFrame {
         } else {
             newMask = newMask.concat("-");
         }
-        fileOperator.saveAcls(entities, newMask, currentPath);
+        aclOperator.saveAcls(entities, newMask, currentPath);
         printFileInfo();
     }
 
@@ -478,11 +490,11 @@ public class SystemConfigAcl extends JFrame {
         switch (entityType) {
             case GROUP:
             case D_GROUP:
-                types.addAll(fileInfo.getSystemGroups());
+                types.addAll(systemInfo.getSystemGroups());
                 break;
             case USER:
             case D_USER:
-                types.addAll(fileInfo.getSystemUsers());
+                types.addAll(systemInfo.getSystemUsers());
                 break;
             case NEW:
                 types.add(DefaultUserType.DEFAULT.toString());
