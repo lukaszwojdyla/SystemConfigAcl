@@ -54,14 +54,14 @@ import pl.edu.agh.model.DefaultUserType;
 import pl.edu.agh.model.Entity;
 import pl.edu.agh.model.EntityTableModel;
 import pl.edu.agh.model.EntityType;
-import pl.edu.agh.utils.lib.FileInfo;
+import pl.edu.agh.lib.FileInfo;
 import pl.edu.agh.model.FileSystemModel;
 import pl.edu.agh.model.OsType;
-import pl.edu.agh.utils.lib.AclOperator;
-import pl.edu.agh.utils.lib.OsUtils;
+import pl.edu.agh.lib.AclOperator;
+import pl.edu.agh.lib.OsUtils;
 import javax.swing.event.TreeWillExpandListener;
 import pl.edu.agh.model.PermissionType;
-import pl.edu.agh.utils.lib.SystemInfo;
+import pl.edu.agh.lib.SystemInfo;
 
 /**
  *
