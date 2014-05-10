@@ -123,7 +123,9 @@ public class FileInfo {
         String output = new String();
 
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"file", "-b", path});
+            String cmd = "file -b " + path;
+            Process p = Runtime.getRuntime().exec(cmd);
+            System.out.println("Get type: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 List<String> result = IOUtils.readLines(p.getInputStream());
@@ -140,7 +142,9 @@ public class FileInfo {
         String output = new String();
 
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getfacl", path});
+            String cmd = "getfacl " + path;
+            Process p = Runtime.getRuntime().exec(cmd);
+            System.out.println("Get mask: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 if (retVal == 0) {
@@ -157,6 +161,7 @@ public class FileInfo {
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
+        System.out.println("Mask is: " + output);
 
         return output;
     }
@@ -165,7 +170,9 @@ public class FileInfo {
         String output = new String();
 
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getfacl", path});
+            String cmd = "getfacl " + path;
+            Process p = Runtime.getRuntime().exec(cmd);
+            System.out.println("Get flags: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 if (retVal == 0) {
@@ -189,7 +196,9 @@ public class FileInfo {
     public String getOwner(String path) {
         String owner = "";
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"getfacl", path});
+            String cmd = "getfacl " + path;
+            Process p = Runtime.getRuntime().exec(cmd);
+            System.out.println("Get owner: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 

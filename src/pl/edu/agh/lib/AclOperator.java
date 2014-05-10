@@ -35,20 +35,22 @@ public class AclOperator {
 
     public void saveAcls(List<Entity> entities, String mask, String currentPath) {
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"setfacl", "-b", currentPath});
+            String cmd = "setfacl -b " + currentPath;
+            Process p = Runtime.getRuntime().exec(cmd);
+            System.out.println("Remove all ACLs: " + cmd);
         } catch (IOException ex) {
             Logger.getLogger(AclOperator.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        for(Iterator<Entity> iterator = entities.iterator(); iterator.hasNext();) {
+
+        for (Iterator<Entity> iterator = entities.iterator(); iterator.hasNext();) {
             Entity entity = iterator.next();
             if (entity.getType().equals(EntityType.NEW) || entity.getName().equals(DefaultUserType.DEFAULT.toString())) {
                 iterator.remove();
             }
         }
-        
+
         if (!entities.isEmpty()) {
-            for (Entity entity : entities) {
+            entities.stream().map((entity) -> {
                 if (!entity.getType().equals(EntityType.NEW) && !entity.getName().equals(DefaultUserType.DEFAULT.toString())) {
                     String permissions = "";
                     String type = "";
@@ -74,25 +76,31 @@ public class AclOperator {
                         type = "g";
                     }
                     try {
-                        Process p = Runtime.getRuntime().exec("setfacl -m " + type + ":" + entity.getName() + ":" + permissions + " " + currentPath);
+                        String cmd = "setfacl -m " + type + ":" + entity.getName() + ":" + permissions + " " + currentPath;
+                        System.out.println("Write new ACL: " + cmd);
+                        Process p = Runtime.getRuntime().exec(cmd);
                     } catch (IOException ex) {
                         Logger.getLogger(AclOperator.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                 }
+                return entity;
+            }).forEach((_item) -> {
                 try {
-                    Process p = Runtime.getRuntime().exec("setfacl -m m:" + mask + " " + currentPath);
+                    String cmd = "setfacl -m m:" + mask + " " + currentPath;
+                    System.out.println("Set new mask: " + cmd);
+                    Process p = Runtime.getRuntime().exec(cmd);
                 } catch (IOException ex) {
                     Logger.getLogger(AclOperator.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
+            });
         }
     }
 
     /**
      *
      * @param path the value of path
-     * @return 
+     * @return
      */
     public List getAclList(String path) {
         List<Entity> entities = new ArrayList<>();

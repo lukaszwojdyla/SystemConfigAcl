@@ -135,6 +135,7 @@ public class SystemConfigAcl extends JFrame {
         typesCombox = new JComboBox();
         fileSystemModel = new FileSystemModel(new File(rootPath));
         aclOperator = new AclOperator();
+        systemInfo = new SystemInfo();
         fileInfo = new FileInfo();
         sp = new JScrollPane();
         browser = new JScrollPane();
