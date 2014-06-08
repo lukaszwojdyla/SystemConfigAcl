@@ -86,6 +86,8 @@ public class SystemConfigAcl extends JFrame {
     private JLabel path;
     private JLabel pathLabel;
     private JLabel setmaskLabel;
+    private JLabel inode;
+    private JLabel inodeLabel;
     private JPanel properties;
     private JButton addButton;
     private JButton removeButton;
@@ -158,8 +160,10 @@ public class SystemConfigAcl extends JFrame {
         maskLabel = new JLabel();
         mask = new JLabel();
         flagsLabel = new JLabel();
-        flags = new JLabel();
+        flags = new JLabel();    
         setmaskLabel = new JLabel();
+        inodeLabel = new JLabel();
+        inode = new JLabel();
         entities = new ArrayList<>();
         users = systemInfo.getSystemUsers();
     }
@@ -200,7 +204,10 @@ public class SystemConfigAcl extends JFrame {
         flags.setText("flags");
 
         setmaskLabel.setText("Set mask:");
-
+        
+        inodeLabel.setText("Inode numer:");
+        inode.setText("inode");
+        
         readMask.setText("read");
         readMask.setEnabled(false);
 
@@ -237,13 +244,15 @@ public class SystemConfigAcl extends JFrame {
                                                 .addComponent(pathLabel, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
                                                 .addComponent(flagsLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
                                                 .addComponent(maskLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addComponent(typeLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                                .addComponent(typeLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(inodeLabel, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                                         .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                                 .addComponent(type, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addComponent(mask, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addComponent(path, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addComponent(flags, GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                                .addComponent(flags, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(inode, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                                 .addGroup(propertiesLayout.createSequentialGroup()
                                         .addComponent(setmaskLabel)
                                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
@@ -273,6 +282,10 @@ public class SystemConfigAcl extends JFrame {
                         .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(flagsLabel)
                                 .addComponent(flags))
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(inodeLabel)
+                                .addComponent(inode))
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(propertiesLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(setmaskLabel)
@@ -536,7 +549,7 @@ public class SystemConfigAcl extends JFrame {
     }
 
     private void printFileInfo() {
-        fileInfo.getInfoFromFS(entities, aclList, path, type, mask, flags, readMask, writeMask, executeMask, currentPath);
+        fileInfo.getInfoFromFS(entities, aclList, path, type, mask, flags, inode, readMask, writeMask, executeMask, currentPath);
         namesCombox.setSelectedIndex(-1);
         typesCombox.setSelectedIndex(-1);
         aclList.updateUI();
@@ -550,8 +563,7 @@ public class SystemConfigAcl extends JFrame {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
 
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(SystemConfigAcl.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SystemConfigAcl.class.getName()).log(Level.SEVERE, null, ex);
         }
         SwingUtilities.invokeLater(() -> {
             new SystemConfigAcl().setVisible(true);

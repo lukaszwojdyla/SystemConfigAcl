@@ -44,11 +44,12 @@ public class FileInfo {
     }
 
     public void getInfoFromFS(List<Entity> entities, JTable aclList, JLabel jPath, JLabel jType,
-            JLabel jMask, JLabel jFlags, JCheckBox jReadMask, JCheckBox jWriteMask, JCheckBox jExecuteMask, String currentPath) {
+            JLabel jMask, JLabel jFlags, JLabel jInodeNumer, JCheckBox jReadMask, JCheckBox jWriteMask, JCheckBox jExecuteMask, String currentPath) {
         if (isReadeable(currentPath)) {
             String type = getType(currentPath);
             String mask = getMask(currentPath);
             String flags = getFlags(currentPath);
+            String inode = getInodeNumber(currentPath);
 
             entities.clear();
             entities.addAll(aclOperator.getAclList(currentPath));
@@ -65,6 +66,7 @@ public class FileInfo {
             }
             jMask.setText(mask);
             jFlags.setText(flags);
+            jInodeNumer.setText(inode);
 
             if (mask.equals("")) {
                 jReadMask.setSelected(false);
@@ -125,7 +127,6 @@ public class FileInfo {
         try {
             String cmd = "file -b " + path;
             Process p = Runtime.getRuntime().exec(cmd);
-            System.out.println("Get type: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 List<String> result = IOUtils.readLines(p.getInputStream());
@@ -144,7 +145,6 @@ public class FileInfo {
         try {
             String cmd = "getfacl " + path;
             Process p = Runtime.getRuntime().exec(cmd);
-            System.out.println("Get mask: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 if (retVal == 0) {
@@ -161,7 +161,6 @@ public class FileInfo {
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("Mask is: " + output);
 
         return output;
     }
@@ -172,7 +171,6 @@ public class FileInfo {
         try {
             String cmd = "getfacl " + path;
             Process p = Runtime.getRuntime().exec(cmd);
-            System.out.println("Get flags: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
                 if (retVal == 0) {
@@ -193,21 +191,23 @@ public class FileInfo {
         return output;
     }
     
-    public String getOwner(String path) {
-        String owner = "";
+    public String getInodeNumber(String path) {
+        String inode = "";
         try {
-            String cmd = "getfacl " + path;
+            String cmd = "stat -c %i " + path;
             Process p = Runtime.getRuntime().exec(cmd);
-            System.out.println("Get owner: " + cmd);
             int retVal = p.waitFor();
             if (retVal == 0) {
-                
+                if (retVal == 0) {
+                    List<String> result = IOUtils.readLines(p.getInputStream());
+                    inode = result.get(0);
+                }
             }
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(FileInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return owner;
+        return inode;
     }
 
     private boolean isWritable(String path) {

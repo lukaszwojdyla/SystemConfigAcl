@@ -37,8 +37,8 @@ public class AclOperator {
         try {
             String cmd = "setfacl -b " + currentPath;
             Process p = Runtime.getRuntime().exec(cmd);
-            System.out.println("Remove all ACLs: " + cmd);
-        } catch (IOException ex) {
+            p.waitFor();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(AclOperator.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -77,9 +77,9 @@ public class AclOperator {
                     }
                     try {
                         String cmd = "setfacl -m " + type + ":" + entity.getName() + ":" + permissions + " " + currentPath;
-                        System.out.println("Write new ACL: " + cmd);
                         Process p = Runtime.getRuntime().exec(cmd);
-                    } catch (IOException ex) {
+                        p.waitFor();
+                    } catch (IOException | InterruptedException ex) {
                         Logger.getLogger(AclOperator.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
@@ -88,9 +88,9 @@ public class AclOperator {
             }).forEach((_item) -> {
                 try {
                     String cmd = "setfacl -m m:" + mask + " " + currentPath;
-                    System.out.println("Set new mask: " + cmd);
                     Process p = Runtime.getRuntime().exec(cmd);
-                } catch (IOException ex) {
+                    p.waitFor();
+                } catch (IOException | InterruptedException ex) {
                     Logger.getLogger(AclOperator.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });

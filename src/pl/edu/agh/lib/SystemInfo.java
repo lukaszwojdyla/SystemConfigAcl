@@ -78,5 +78,4 @@ public class SystemInfo {
         }
         return users;
     }
-    
 }
